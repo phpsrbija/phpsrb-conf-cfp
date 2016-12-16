@@ -1,0 +1,8 @@
+<?php
+return [
+    'parameters' => [
+        'repository' => 'git@github.com:phpsrbija/phpsrb-conf-cfp.git',
+        'keep_releases' => 3,
+    ],
+    'servers' => __DIR__ . '/servers.yml',
+];

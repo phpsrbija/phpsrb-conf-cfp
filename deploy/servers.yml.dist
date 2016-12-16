@@ -1,0 +1,15 @@
+production:
+  host: example.com
+  user: root
+  identity_file:
+    public_key: /path/to/public.key
+    private_key: /path/to/private.key
+  deploy_path: /home/example
+  stage: production
+
+staging:
+  host: staging.example.com
+  user: root
+  deploy_path: /home/example
+  password: pass
+  stage: staging

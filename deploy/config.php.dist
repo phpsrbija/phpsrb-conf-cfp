@@ -3,6 +3,8 @@ return [
     'parameters' => [
         'repository' => 'git@github.com:phpsrbija/phpsrb-conf-cfp.git',
         'keep_releases' => 3,
+        'writable_mode' => 'chmod',
+        'writable_chmod_mode' => '0777',
     ],
     'servers' => __DIR__ . '/servers.yml',
 ];

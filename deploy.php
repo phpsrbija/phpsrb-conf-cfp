@@ -19,6 +19,7 @@ set('writable_dirs', [
 set('shared_files', [
     'config/production.yml',
     'config/development.yml',
+    'phinx.yml',
 ]);
 
 task('phinx:migrate', function () {

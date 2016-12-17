@@ -16,6 +16,7 @@ foreach ($config['parameters'] as $key => $value) {
 set('writable_dirs', [
     'log',
     'web/uploads',
+    'vendor/ezyang/htmlpurifier',
 ]);
 set('shared_files', [
     'config/production.yml',
@@ -38,9 +39,9 @@ task('deploy', [
     'deploy:release',
     'deploy:update_code',
     'deploy:shared',
-    'deploy:writable',
     'deploy:vendors',
     'phinx:migrate',
+    'deploy:writable',
     'deploy:symlink',
     'cleanup',
 ])->desc('Deploy project');

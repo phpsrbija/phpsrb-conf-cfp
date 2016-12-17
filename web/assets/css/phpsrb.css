@@ -84,10 +84,9 @@ a:focus, a:hover {
 
 .nav-tabs > li > a {
     background: #1571f9;
-    color: #023fa8;
+    color: #fff;
 }
-
 .nav-tabs > li > a:hover {
-    color: #1571f9;
     background: #023fa8;
+    color: #fff;
 }

@@ -1,89 +1,65 @@
 body {
-    background: #023fa8;
-    color: #f9fcfd;
+    background-color: #fff;
+    color: #333;
 }
 
 a {
-    color: #9eb4cc;
+    color: #337ab7;
 }
-
-a:hover {
-    color: #f9fcfd;
-}
-
-.dashboard {
-    background: #213046;
+a:focus, a:hover {
+    color: #23527c;
 }
 
 .header {
-    background: #023fa8 url("/assets/img/space_banner.jpg") no-repeat scroll left bottom;
-    color: #f9fcfd;
-}
-
-.sidebar {
-    background: #213046;
+    background: #e7e7e7 url("/assets/img/space_banner_1.jpg") no-repeat scroll left top;
+    color: #fff;
 }
 
 .section--primary {
-    background: #9eb4cc;
+    background: #0069a2;
     color: #f9fcfd;
 }
 
 .section--light {
-    background: #f9fcfd;
-    color: #9eb4cc;
+    background: #e7e7e7;
+    color: #7e8690;
 }
 
-.btn-opencfp--primary {
+.btn-opencfp--primary, .btn-opencfp--primary:hover {
     background: #f9fcfd;
-    color: #9eb4cc;
-}
-
-.btn-opencfp--primary:hover {
-    background: #9eb4cc;
-    color: #f9fcfd;
+    color: #0149c6;
 }
 
 .btn-opencfp--light {
-    background: #213046;
-    color: #9eb4cc;
+    background: #1571f9;
+    color: #fff;
 }
-
 .btn-opencfp--light:hover {
-    background: #9eb4cc;
-    color: #f9fcfd;
+    background: #023fa8;
+    color: #fff;
 }
 
 .btn-opencfp--outlined {
     border-color: #f9fcfd;
     color: #f9fcfd;
 }
-
 .btn-opencfp--outlined:hover {
     background: #f9fcfd;
-    color: #9eb4cc;
+    color: #0149c6;
 }
 
 .module__header {
+    background: #023fa8;
     color: #f9fcfd;
-    background: #9eb4cc;
-}
-
-.module__body {
-    color: #213046;
-}
-
-.module__footer {
-    background: #9eb4cc;
 }
 
 .navbar-opencfp {
-    background: #f9fcfd;
+    background: #023fa8;
 }
 
 .navbar-opencfp .navbar-nav > li > a,
 .navbar-opencfp .navbar-nav .dropdown-menu > li > a{
-    color: #9eb4cc;
+    color: #fff;
 }
 
 .navbar-opencfp .navbar-nav > li > a:hover,
@@ -96,27 +72,22 @@ a:hover {
 .navbar-opencfp .nav .open>a:hover,
 .navbar-opencfp .nav .open>a:focus
 {
-    border-color: #9eb4cc;
-}
-
-label {
-    color: #9eb4cc;
+    border-color: #fff;
 }
 
 .help-block a {
-    color: #9eb4cc;
+    color: #1571f9;
 }
-
 .help-block a:hover {
-    color: #213046;
+    color: #023fa8;
 }
 
 .nav-tabs > li > a {
-    background: #9eb4cc;
-    color: #f9fcfd;
+    background: #1571f9;
+    color: #023fa8;
 }
 
 .nav-tabs > li > a:hover {
-    background: #f9fcfd;
-    color: #9eb4cc;
+    color: #1571f9;
+    background: #023fa8;
 }

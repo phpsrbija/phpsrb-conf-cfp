@@ -2,67 +2,50 @@
 
 namespace OpenCFP\Http\Controller\Admin;
 
-use Cartalyst\Sentry\Sentry;
+use OpenCFP\Domain\Entity\Talk as TalkEntity;
+use OpenCFP\Domain\Model\Favorite;
+use OpenCFP\Domain\Model\Talk;
+use OpenCFP\Domain\Services\Authentication;
+use OpenCFP\Domain\Services\Pagination;
+use OpenCFP\Domain\Services\TalkRating\TalkRatingException;
+use OpenCFP\Domain\Services\TalkRating\TalkRatingStrategy;
+use OpenCFP\Domain\Speaker\SpeakerProfile;
+use OpenCFP\Domain\Talk\TalkFilter;
 use OpenCFP\Http\Controller\BaseController;
 use OpenCFP\Http\Controller\FlashableTrait;
-use Pagerfanta\View\TwitterBootstrap3View;
 use Spot\Locator;
 use Symfony\Component\HttpFoundation\Request;
 
 class TalksController extends BaseController
 {
-    use AdminAccessTrait;
     use FlashableTrait;
 
     public function indexAction(Request $req)
     {
-        if (!$this->userHasAccess()) {
-            return $this->redirectTo('dashboard');
-        }
+        /* @var Authentication $auth */
+        $auth = $this->service(Authentication::class);
 
-        /* @var Sentry $sentry */
-        $sentry = $this->service('sentry');
-
-        $admin_user_id = $sentry->getUser()->getId();
+        $admin_user_id = $auth->userId();
         $options = [
             'order_by' => $req->get('order_by'),
             'sort' => $req->get('sort'),
         ];
 
-        $pager_formatted_talks = $this->getFilteredTalks(
-            $req->get('filter'),
+        $pager_formatted_talks = $this->service(TalkFilter::class)->getFilteredTalks(
             $admin_user_id,
+            $req->get('filter'),
             $options
         );
 
-        $per_page = (int) $req->get('per_page') ?: 20;
-
         // Set up our page stuff
-        $adapter = new \Pagerfanta\Adapter\ArrayAdapter($pager_formatted_talks);
-        $pagerfanta = new \Pagerfanta\Pagerfanta($adapter);
-        $pagerfanta->setMaxPerPage($per_page);
-        $pagerfanta->getNbResults();
-
-        if ($req->get('page') !== null) {
-            $pagerfanta->setCurrentPage($req->get('page'));
-        }
-
-        $queryParams = $req->query->all();
-        // Create our default view for the navigation options
-        $routeGenerator = function ($page) use ($queryParams) {
-            $queryParams['page'] = $page;
-            return '/admin/talks?' . http_build_query($queryParams);
-        };
-        $view = new TwitterBootstrap3View();
-        $pagination = $view->render(
-            $pagerfanta,
-            $routeGenerator,
-            ['proximity' => 3]
-        );
+        $per_page = (int) $req->get('per_page') ?: 20;
+        $pagerfanta = new Pagination($pager_formatted_talks, $per_page);
+        $pagerfanta->setCurrentPage($req->get('page'));
+        $pagination = $pagerfanta->createView('/admin/talks?', $req->query->all());
 
         $templateData = [
             'pagination' => $pagination,
-            'talks' => $pagerfanta,
+            'talks' => $pagerfanta->getFanta(),
             'page' => $pagerfanta->getCurrentPage(),
             'current_page' => $req->getRequestUri(),
             'totalRecords' => count($pager_formatted_talks),
@@ -75,157 +58,61 @@ class TalksController extends BaseController
         return $this->render('admin/talks/index.twig', $templateData);
     }
 
-    private function getFilteredTalks($filter = null, $admin_user_id, $options = [])
-    {
-        /* @var Locator $spot */
-        $spot = $this->service('spot');
-
-        $talk_mapper = $spot->mapper(\OpenCFP\Domain\Entity\Talk::class);
-        if ($filter === null) {
-            return $talk_mapper->getAllPagerFormatted($admin_user_id, $options);
-        }
-
-        switch (strtolower($filter)) {
-            case "selected":
-                return $talk_mapper->getSelected($admin_user_id, $options);
-                break;
-
-            case "notviewed":
-                return $talk_mapper->getNotViewedByUserId($admin_user_id, $options);
-                break;
-
-            case "notrated":
-                return $talk_mapper->getNotRatedByUserId($admin_user_id, $options);
-                break;
-
-            case "rated":
-                return $talk_mapper->getRatedByUserId($admin_user_id, $options);
-                break;
-
-            case "viewed":
-                return $talk_mapper->getViewedByUserId($admin_user_id, $options);
-                break;
-
-            case "favorited":
-                return $talk_mapper->getFavoritesByUserId($admin_user_id, $options);
-                break;
-
-            default:
-                return $talk_mapper->getAllPagerFormatted($admin_user_id, $options);
-        }
-    }
-
     public function viewAction(Request $req)
     {
-        if (!$this->userHasAccess()) {
-            return $this->redirectTo('dashboard');
-        }
-
-        /* @var Locator $spot */
-        $spot = $this->service('spot');
-
-        // Get info about the talks
-        $talk_mapper = $spot->mapper(\OpenCFP\Domain\Entity\Talk::class);
-        $meta_mapper = $spot->mapper(\OpenCFP\Domain\Entity\TalkMeta::class);
-        $talk_id = $req->get('id');
-
-        $talk = $talk_mapper->where(['id' => $talk_id])
+        $talkId = $req->get('id');
+        $talk = Talk::where('id', $talkId)
             ->with(['comments'])
             ->first();
 
-        if (empty($talk)) {
+        if (!$talk instanceof Talk) {
             $this->service('session')->set('flash', [
                 'type' => 'error',
                 'short' => 'Error',
-                'ext' => "Could not find requested talk",
+                'ext' => 'Could not find requested talk',
             ]);
 
             return $this->app->redirect($this->url('admin_talks'));
         }
 
-        /* @var Sentry $sentry */
-        $sentry = $this->service('sentry');
+        $userId = $this->service(Authentication::class)->userId();
 
         // Mark talk as viewed by admin
-        $talk_meta = $meta_mapper->where([
-                'admin_user_id' => $sentry->getUser()->getId(),
-                'talk_id' => (int)$req->get('id'),
-            ])
-            ->first();
+        $talkMeta = $talk
+            ->meta()
+            ->firstOrNew([
+                'admin_user_id' => $userId,
+                'talk_id' => $talkId,
+            ]);
+        $talkMeta->viewTalk();
 
-        if (!$talk_meta) {
-            $talk_meta = $meta_mapper->get();
-        }
-
-        if (!$talk_meta->viewed) {
-            $talk_meta->viewed = true;
-            $talk_meta->admin_user_id = $sentry->getUser()->getId();
-            $talk_meta->talk_id = $talk_id;
-            $meta_mapper->save($talk_meta);
-        }
-
-        $all_talks = $talk_mapper->all()
-            ->where(['user_id' => $talk->user_id])
-            ->toArray();
-
-        // Get info about our speaker
-        $user_mapper = $spot->mapper(\OpenCFP\Domain\Entity\User::class);
-        $speaker = $user_mapper->get($talk->user_id)->toArray();
-
-        // Grab all the other talks and filter out the one we have
-        $otherTalks = array_filter($all_talks, function ($talk) use ($talk_id) {
-            if ((int) $talk['id'] == (int) $talk_id) {
-                return false;
-            }
-
-            return true;
-        });
+        $speaker = $talk->speaker;
+        $otherTalks = $speaker->getOtherTalks($talkId);
 
         // Build and render the template
         $templateData = [
-            'talk' => $talk,
-            'talk_meta' => $talk_meta,
-            'speaker' => $speaker,
+            'talk' => $talk->toArray(),
+            'talk_meta' => $talkMeta,
+            'speaker' => new SpeakerProfile($speaker),
             'otherTalks' => $otherTalks,
+            'comments' => $talk->comments()->get(),
         ];
-
         return $this->render('admin/talks/view.twig', $templateData);
     }
 
     public function rateAction(Request $req)
     {
-        if (!$this->userHasAccess()) {
+        /** @var TalkRatingStrategy $talkRatingStrategy */
+        $talkRatingStrategy = $this->service(TalkRatingStrategy::class);
+
+        try {
+            $talk_rating = (int) $req->get('rating');
+            $talk_id = (int) $req->get('id');
+
+            $talkRatingStrategy->rate($talk_id, $talk_rating);
+        } catch (TalkRatingException $e) {
             return false;
         }
-
-        /* @var Sentry $sentry */
-        $sentry = $this->service('sentry');
-
-        $admin_user_id = (int) $sentry->getUser()->getId();
-        $mapper = $this->service('spot')->mapper(\OpenCFP\Domain\Entity\TalkMeta::class);
-
-        $talk_rating = (int)$req->get('rating');
-        $talk_id = (int)$req->get('id');
-
-        // Check for invalid rating range
-        if ($talk_rating < -1 || $talk_rating > 1) {
-            return false;
-        }
-
-        $talk_meta = $mapper->where([
-                'admin_user_id' => $admin_user_id,
-                'talk_id' => (int)$req->get('id'),
-            ])
-            ->first();
-
-        if (!$talk_meta) {
-            $talk_meta = $mapper->get();
-            $talk_meta->admin_user_id = $admin_user_id;
-            $talk_meta->talk_id = $talk_id;
-        }
-
-        $talk_meta->rating = $talk_rating;
-        $mapper->save($talk_meta);
 
         return true;
     }
@@ -233,52 +120,27 @@ class TalksController extends BaseController
     /**
      * Set Favorited Talk [POST]
      *
-     * @param  Request $req Request Object
+     * @param Request $req Request Object
+     *
      * @return bool
      */
     public function favoriteAction(Request $req)
     {
-        if (!$this->userHasAccess()) {
-            return false;
-        }
-
-        /* @var Sentry $sentry */
-        $sentry = $this->service('sentry');
-
-        $admin_user_id = (int) $sentry->getUser()->getId();
-        $status = true;
+        $admin_user_id = $this->service(Authentication::class)->userId();
+        $talkId = (int) $req->get('id');
 
         if ($req->get('delete') !== null) {
-            $status = false;
-        }
-
-        /* @var Locator $spot */
-        $spot = $this->service('spot');
-
-        $mapper = $spot->mapper(\OpenCFP\Domain\Entity\Favorite::class);
-
-        if ($status == false) {
             // Delete the record that matches
-            $favorite = $mapper->first([
-                'admin_user_id' => $admin_user_id,
-                'talk_id' => (int) $req->get('id'),
-            ]);
-
-            return $mapper->delete($favorite);
+            return Favorite::where('admin_user_id', $admin_user_id)
+                ->where('talk_id', $talkId)
+                ->first()
+                ->delete();
         }
 
-        $previous_favorite = $mapper->where([
+        Favorite::firstOrCreate([
             'admin_user_id' => $admin_user_id,
-            'talk_id' => (int) $req->get('id'),
+            'talk_id' => $talkId,
         ]);
-
-        if ($previous_favorite->count() == 0) {
-            $favorite = $mapper->get();
-            $favorite->admin_user_id = $admin_user_id;
-            $favorite->talk_id = (int) $req->get('id');
-
-            return $mapper->insert($favorite);
-        }
 
         return true;
     }
@@ -286,15 +148,12 @@ class TalksController extends BaseController
     /**
      * Set Selected Talk [POST]
      *
-     * @param  Request $req Request Object
+     * @param Request $req Request Object
+     *
      * @return bool
      */
     public function selectAction(Request $req)
     {
-        if (!$this->userHasAccess()) {
-            return false;
-        }
-
         $status = true;
 
         if ($req->get('delete') !== null) {
@@ -304,9 +163,16 @@ class TalksController extends BaseController
         /* @var Locator $spot */
         $spot = $this->service('spot');
 
-        $mapper = $spot->mapper(\OpenCFP\Domain\Entity\Talk::class);
+        $mapper = $spot->mapper(TalkEntity::class);
         $talk = $mapper->get($req->get('id'));
-        $talk->selected = $status;
+
+        $selected = 1;
+
+        if ($status == false) {
+            $selected = 0;
+        }
+
+        $talk->selected = $selected;
         $mapper->save($talk);
 
         return true;
@@ -314,16 +180,10 @@ class TalksController extends BaseController
 
     public function commentCreateAction(Request $req)
     {
-        if (!$this->userHasAccess()) {
-            return false;
-        }
-
         $talk_id = (int)$req->get('id');
 
-        /* @var Sentry $sentry */
-        $sentry = $this->service('sentry');
-
-        $admin_user_id = (int) $sentry->getUser()->getId();
+        $user = $this->service(Authentication::class)->user();
+        $admin_user_id = (int) $user->getId();
 
         /* @var Locator $spot */
         $spot = $this->service('spot');
@@ -340,7 +200,7 @@ class TalksController extends BaseController
         $this->service('session')->set('flash', [
                 'type' => 'success',
                 'short' => 'Success',
-                'ext' => "Comment Added!",
+                'ext' => 'Comment Added!',
             ]);
 
         return $this->app->redirect($this->url('admin_talk_view', ['id' => $talk_id]));

@@ -2,26 +2,17 @@
 
 namespace OpenCFP\Http\Controller;
 
-use Cartalyst\Sentry\Sentry;
+use OpenCFP\Domain\Model\User;
+use OpenCFP\Domain\Services\Authentication;
 use OpenCFP\Http\Form\SignupForm;
-use Silex\Application;
 use Spot\Locator;
 use Symfony\Component\HttpFoundation\Request;
 
 class ProfileController extends BaseController
 {
-    use FlashableTrait;
-
     public function editAction(Request $req)
     {
-        /* @var Sentry $sentry */
-        $sentry = $this->service('sentry');
-
-        if (!$sentry->check()) {
-            return $this->redirectTo('login');
-        }
-
-        $user = $sentry->getUser();
+        $user = $this->service(Authentication::class)->user();
 
         if ((string) $user->getId() !== $req->get('id')) {
             $this->service('session')->set('flash', [
@@ -35,7 +26,7 @@ class ProfileController extends BaseController
 
         /* @var Locator $spot */
         $spot = $this->service('spot');
-        
+
         $mapper = $spot->mapper('\OpenCFP\Domain\Entity\User');
         $speaker_data = $mapper->get($user->getId())->toArray();
 
@@ -45,6 +36,7 @@ class ProfileController extends BaseController
             'last_name' => $speaker_data['last_name'],
             'company' => $speaker_data['company'],
             'twitter' => $speaker_data['twitter'],
+            'url' => $speaker_data['url'],
             'speaker_info' => $speaker_data['info'],
             'speaker_bio' => $speaker_data['bio'],
             'speaker_photo' => $speaker_data['photo_path'],
@@ -62,16 +54,9 @@ class ProfileController extends BaseController
 
     public function processAction(Request $req)
     {
-        /* @var Sentry $sentry */
-        $sentry = $this->service('sentry');
+        $userId = $this->service(Authentication::class)->userId();
 
-        if (!$sentry->check()) {
-            return $this->redirectTo('login');
-        }
-
-        $user = $sentry->getUser();
-
-        if ((string) $user->getId() !== $req->get('id')) {
+        if ((string) $userId !== $req->get('id')) {
             $this->service('session')->set('flash', [
                 'type' => 'error',
                 'short' => 'Error',
@@ -81,22 +66,9 @@ class ProfileController extends BaseController
             return $this->redirectTo('dashboard');
         }
 
-        $form_data = [
-            'email' => $req->get('email'),
-            'user_id' => $req->get('id'),
-            'first_name' => $req->get('first_name'),
-            'last_name' => $req->get('last_name'),
-            'company' => $req->get('company'),
-            'twitter' => $req->get('twitter'),
-            'airport' => $req->get('airport'),
-            'transportation' => $req->get('transportation'),
-            'hotel' => $req->get('hotel'),
-            'speaker_info' => $req->get('speaker_info') ?: null,
-            'speaker_bio' => $req->get('speaker_bio') ?: null,
-        ];
+        $form_data = $this->getFormData($req);
 
         if ($req->files->get('speaker_photo') != null) {
-            // Upload Image
             $form_data['speaker_photo'] = $req->files->get('speaker_photo');
         }
 
@@ -104,98 +76,37 @@ class ProfileController extends BaseController
         $isValid = $form->validateAll('update');
 
         if ($isValid) {
-            $sanitized_data = $form->getCleanData();
-
-            // Remove leading @ for twitter
-            $sanitized_data['twitter'] = preg_replace('/^@/', '', $sanitized_data['twitter']);
-
+            $sanitized_data = $this->transformSanitizedData($form->getCleanData());
             if (isset($form_data['speaker_photo'])) {
-                /** @var \Symfony\Component\HttpFoundation\File\UploadedFile $file */
-                $file = $form_data['speaker_photo'];
-                /** @var \OpenCFP\Domain\Services\ProfileImageProcessor $processor */
-                $processor = $this->service('profile_image_processor');
-                /** @var PseudoRandomStringGenerator $generator */
-                $generator = $this->service('security.random');
-
-                /**
-                 * The extension technically is not required. We guess the extension using a trusted method.
-                 */
-                $sanitized_data['speaker_photo'] = $generator->generate(40) . '.' . $file->guessExtension();
-
-                $processor->process($file, $sanitized_data['speaker_photo']);
+                $sanitized_data['photo_path'] = $this->service('profile_image_processor')
+                    ->process($form_data['speaker_photo']);
             }
-
-            /* @var Locator $spot */
-            $spot = $this->service('spot');
-            
-            $mapper = $spot->mapper('\OpenCFP\Domain\Entity\User');
-            $user = $mapper->get($user->getId());
-            $user->email = $sanitized_data['email'];
-            $user->first_name = $sanitized_data['first_name'];
-            $user->last_name = $sanitized_data['last_name'];
-            $user->company = $sanitized_data['company'];
-            $user->twitter = $sanitized_data['twitter'];
-            $user->airport = $sanitized_data['airport'];
-            $user->transportation = (int) $sanitized_data['transportation'];
-            $user->hotel = (int) $sanitized_data['hotel'];
-            $user->info = $sanitized_data['speaker_info'];
-            $user->bio = $sanitized_data['speaker_bio'];
-
-            if (isset($sanitized_data['speaker_photo'])) {
-                $user->photo_path = $sanitized_data['speaker_photo'];
-            }
-
-            /** @var $response number of affected rows */
-            $response = $mapper->save($user);
-
-            if ($response >= 0) {
-                $this->service('session')->set('flash', [
-                    'type' => 'success',
-                    'short' => 'Success',
-                    'ext' => "Successfully updated your information!",
-                ]);
-
-                return $this->redirectTo('dashboard');
-            }
-        } else {
-            $this->service('session')->set('flash', [
+            unset($sanitized_data['speaker_photo']);
+            User::find($userId)->update($sanitized_data);
+            return $this->redirectTo('dashboard');
+        }
+        $this->service('session')->set('flash', [
                 'type' => 'error',
                 'short' => 'Error',
                 'ext' => implode('<br>', $form->getErrorMessages()),
             ]);
-        }
 
         $form_data['formAction'] = $this->url('user_update');
         $form_data['buttonInfo'] = 'Update Profile';
-        $form_data['id'] = $user->id;
-        $form_data['user'] = $user;
-        $form_data['flash'] = $this->getFlash($this->app);
+        $form_data['id'] = $userId;
+        $form_data['flash'] = $this->service('session')->get('flash');
 
         return $this->render('user/edit.twig', $form_data);
     }
 
-    public function passwordAction(Request $req)
+    public function passwordAction()
     {
-        /* @var Sentry $sentry */
-        $sentry = $this->service('sentry');
-
-        if (!$sentry->check()) {
-            return $this->redirectTo('login');
-        }
-
         return $this->render('user/change_password.twig');
     }
 
     public function passwordProcessAction(Request $req)
     {
-        /* @var Sentry $sentry */
-        $sentry = $this->service('sentry');
-
-        if (!$sentry->check()) {
-            return $this->redirectTo('login');
-        }
-
-        $user = $sentry->getUser();
+        $user = $this->service(Authentication::class)->user();
 
         /**
          * Okay, the logic is kind of weird but we can use the SignupForm
@@ -212,7 +123,7 @@ class ProfileController extends BaseController
             $this->service('session')->set('flash', [
                 'type' => 'error',
                 'short' => 'Error',
-                'ext' => implode("<br>", $form->getErrorMessages()),
+                'ext' => implode('<br>', $form->getErrorMessages()),
             ]);
 
             return $this->redirectTo('password_edit');
@@ -229,7 +140,7 @@ class ProfileController extends BaseController
             $this->service('session')->set('flash', [
                 'type' => 'error',
                 'short' => 'Error',
-                'ext' => "Unable to update your password in the database. Please try again.",
+                'ext' => 'Unable to update your password in the database. Please try again.',
             ]);
 
             return $this->redirectTo('password_edit');
@@ -238,37 +149,55 @@ class ProfileController extends BaseController
         $this->service('session')->set('flash', [
             'type' => 'success',
             'short' => 'Success',
-            'ext' => "Changed your password.",
+            'ext' => 'Changed your password.',
         ]);
 
         return $this->redirectTo('password_edit');
     }
 
     /**
-     * Method that saves user info using sanitized data and an Entity mapper
+     * @param Request $req
      *
-     * @param  Application $app
-     * @param  array       $sanitized_data
-     * @return boolean
+     * @return array
      */
-    protected function saveUser($app, $sanitized_data)
+    private function getFormData(Request $req): array
     {
-        /* @var Locator $spot */
-        $spot = $this->service('spot');
-        
-        $mapper = $spot->mapper('\OpenCFP\Domain\Entity\User');
-        $user = $mapper->get($sanitized_data['user_id']);
-        $user->email = $sanitized_data['email'];
-        $user->first_name = $sanitized_data['first_name'];
-        $user->last_name = $sanitized_data['last_name'];
-        $user->company = $sanitized_data['company'];
-        $user->twitter = $sanitized_data['twitter'];
-        $user->airport = $sanitized_data['airport'];
-        $user->transportation = $sanitized_data['transportation'];
-        $user->hotel = $sanitized_data['hotel'];
-        $user->info = $sanitized_data['speaker_info'];
-        $user->bio = $sanitized_data['speaker_bio'];
+        $form_data = [
+            'email' => $req->get('email'),
+            'user_id' => $req->get('id'),
+            'first_name' => $req->get('first_name'),
+            'last_name' => $req->get('last_name'),
+            'company' => $req->get('company'),
+            'twitter' => $req->get('twitter'),
+            'url' => $req->get('url'),
+            'airport' => $req->get('airport'),
+            'transportation' => (int) $req->get('transportation'),
+            'hotel' => (int) $req->get('hotel'),
+            'speaker_info' => $req->get('speaker_info') ?: null,
+            'speaker_bio' => $req->get('speaker_bio') ?: null,
+        ];
+        return $form_data;
+    }
 
-        return $mapper->save($user);
+    /**
+     * Transforms the sanitized data array to be used by our User Model for updates
+     *
+     * @param array $sanitizedData
+     *
+     * @return array
+     */
+    private function transformSanitizedData(array $sanitizedData): array
+    {
+        // Remove leading @ for twitter
+        $sanitizedData['twitter'] = preg_replace('/^@/', '', $sanitizedData['twitter']);
+
+        $sanitizedData['bio'] = $sanitizedData['speaker_bio'];
+        unset($sanitizedData['speaker_bio']);
+        $sanitizedData['info'] = $sanitizedData['speaker_info'];
+        unset($sanitizedData['speaker_info']);
+        $sanitizedData['id'] = $sanitizedData['user_id'];
+        unset($sanitizedData['user_id']);
+        $sanitizedData['has_made_profile'] = 1;
+        return $sanitizedData;
     }
 }

@@ -2,7 +2,6 @@
 
 namespace OpenCFP\Http\API;
 
-use Exception;
 use OpenCFP\Application\Speakers;
 use OpenCFP\Domain\Services\NotAuthenticatedException;
 use OpenCFP\Domain\Talk\InvalidTalkSubmissionException;
@@ -27,7 +26,8 @@ class TalkController extends ApiController
      * @param Request $request
      *
      * @return JsonResponse
-     * @throws Exception
+     *
+     * @throws \Exception
      */
     public function handleSubmitTalk(Request $request)
     {
@@ -43,7 +43,7 @@ class TalkController extends ApiController
             return $this->setStatusCode(Response::HTTP_BAD_REQUEST)->respondWithError($e->getMessage());
         } catch (NotAuthenticatedException $e) {
             return $this->respondUnauthorized();
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             return $this->respondInternalError($e->getMessage());
         }
     }
@@ -53,8 +53,6 @@ class TalkController extends ApiController
         try {
             $talks = $this->speakers->getTalks();
 
-            // TODO Replace this crap with an object responsible for
-            // the "Talk Resource" to/from json.
             $output = [];
             foreach ($talks as $talk) {
                 $output[] = $talk->toArrayForApi();

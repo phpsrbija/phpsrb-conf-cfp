@@ -22,6 +22,11 @@ class SpeakerProfile
         $this->speaker = $speaker;
     }
 
+    public function needsProfile(): bool
+    {
+        return $this->speaker->has_made_profile == 0;
+    }
+
     /**
      * Returns a collection of the speaker's talks.
      *
@@ -38,7 +43,7 @@ class SpeakerProfile
         return $this->speaker->talks->execute();
     }
 
-    public function getName()
+    public function getName(): string
     {
         return $this->speaker->first_name . ' ' . $this->speaker->last_name;
     }
@@ -56,6 +61,11 @@ class SpeakerProfile
     public function getTwitter()
     {
         return $this->speaker->twitter;
+    }
+
+    public function getUrl()
+    {
+        return $this->speaker->url;
     }
 
     public function getInfo()
@@ -94,6 +104,7 @@ class SpeakerProfile
             'name' => $this->getName(),
             'email' => $this->getEmail(),
             'twitter' => $this->getTwitter(),
+            'url' => $this->getUrl(),
             'bio' => $this->getBio(),
         ];
     }

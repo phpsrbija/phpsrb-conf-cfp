@@ -48,7 +48,7 @@ class Speakers
      *
      * @return SpeakerProfile
      */
-    public function findProfile()
+    public function findProfile(): SpeakerProfile
     {
         $speaker = $this->identityProvider->getCurrentUser();
 
@@ -58,12 +58,13 @@ class Speakers
     /**
      * Retrieves a talk owned by a speaker.
      *
-     * @param $talkId
+     * @param int $talkId
      *
      * @return Talk
+     *
      * @throws NotAuthorizedException
      */
-    public function getTalk($talkId)
+    public function getTalk(int $talkId)
     {
         $speaker = $this->identityProvider->getCurrentUser();
         $talk = $speaker->talks->where(['id' => $talkId])->execute()->first();
@@ -81,9 +82,6 @@ class Speakers
         return $talk;
     }
 
-    /**
-     *
-     */
     public function getTalks()
     {
         $speaker = $this->identityProvider->getCurrentUser();
@@ -97,9 +95,10 @@ class Speakers
      * @param TalkSubmission $submission
      *
      * @return Talk
+     *
      * @throws \Exception
      */
-    public function submitTalk(TalkSubmission $submission)
+    public function submitTalk(TalkSubmission $submission): Talk
     {
         if (!$this->callForProposal->isOpen()) {
             throw new \Exception('You cannot create talks once the call for papers has ended.');

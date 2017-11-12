@@ -5,7 +5,7 @@ namespace OpenCFP\Test\Http\Controller;
 use OpenCFP\Application;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 
-class FlashableTraitTest extends \PHPUnit_Framework_TestCase
+class FlashableTraitTest extends \PHPUnit\Framework\TestCase
 {
     public function testGetFlashReturnsFlashAndClearsIt()
     {
@@ -66,6 +66,7 @@ class FlashableTraitTest extends \PHPUnit_Framework_TestCase
 
     /**
      * @param array $items
+     *
      * @return Application|\PHPUnit_Framework_MockObject_MockObject
      */
     private function getApplicationMock(array $items = [])
@@ -93,6 +94,6 @@ class FlashableTraitTest extends \PHPUnit_Framework_TestCase
      */
     private function getSessionMock()
     {
-        return $this->getMockBuilder('Symfony\Component\HttpFoundation\Session\SessionInterface')->getMock();
+        return $this->getMockBuilder(\Symfony\Component\HttpFoundation\Session\SessionInterface::class)->getMock();
     }
 }

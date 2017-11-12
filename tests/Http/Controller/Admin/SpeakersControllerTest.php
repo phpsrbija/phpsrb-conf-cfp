@@ -2,15 +2,23 @@
 
 namespace OpenCFP\Test\Http\Controller\Admin;
 
+use Cartalyst\Sentry\Users\UserInterface;
 use Mockery as m;
 use OpenCFP\Application;
+use OpenCFP\Domain\Services\Authentication;
 use OpenCFP\Environment;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\HttpFoundation\Session\Storage\MockFileSessionStorage;
 
-class SpeakersControllerTest extends \PHPUnit_Framework_TestCase
+/**
+ * Class SpeakersControllerTest
+ *
+ * @package OpenCFP\Test\Http\Controller\Admin
+ * @group db
+ */
+class SpeakersControllerTest extends \PHPUnit\Framework\TestCase
 {
     private $app;
 
@@ -18,18 +26,19 @@ class SpeakersControllerTest extends \PHPUnit_Framework_TestCase
     {
         // Create our Application object
         $this->app = new Application(BASE_PATH, Environment::testing());
+        $this->app['session.test'] = true;
 
         // Create a test double for our User entity
-        $user = m::mock(\OpenCFP\Domain\Entity\User::class);
+        $user = m::mock(UserInterface::class);
         $user->shouldReceive('hasPermission')->with('admin')->andReturn(true);
         $user->shouldReceive('getId')->andReturn(1);
         $user->shouldReceive('hasAccess')->with('admin')->andReturn(true);
 
         // Create a test double for our Sentry object
-        $sentry = m::mock('Cartalyst\Sentry\Sentry');
-        $sentry->shouldReceive('check')->andReturn(true);
-        $sentry->shouldReceive('getUser')->andReturn($user);
-        $this->app['sentry'] = $sentry;
+        $auth = m::mock(Authentication::class);
+        $auth->shouldReceive('check')->andReturn(true);
+        $auth->shouldReceive('user')->andReturn($user);
+        $this->app[Authentication::class] = $auth;
         $this->app['user'] = $user;
     }
 
@@ -43,7 +52,7 @@ class SpeakersControllerTest extends \PHPUnit_Framework_TestCase
         $speakerId = uniqid();
 
         // Override our mapper with the double
-        $spot = m::mock('Spot\Locator');
+        $spot = m::mock(\Spot\Locator::class);
         $mapper = m::mock(\OpenCFP\Domain\Entity\Mapper\User::class);
         $mapper->shouldReceive('get')
             ->andReturn([]);
@@ -53,16 +62,13 @@ class SpeakersControllerTest extends \PHPUnit_Framework_TestCase
             ->andReturn($mapper);
         $this->app['spot'] = $spot;
 
-        // Create a session object
-        $this->app['session'] = new Session(new MockFileSessionStorage);
-
         // Use our pre-configured Application object
         ob_start();
         $this->app->run();
         ob_end_clean();
 
         // Create our Request object
-        $req = m::mock('Symfony\Component\HttpFoundation\Request');
+        $req = m::mock(\Symfony\Component\HttpFoundation\Request::class);
         $req->shouldReceive('get')->with('id')->andReturn($speakerId);
 
         // Execute the controller and capture the output
@@ -71,7 +77,7 @@ class SpeakersControllerTest extends \PHPUnit_Framework_TestCase
         $response = $controller->viewAction($req);
 
         $this->assertInstanceOf(
-            'Symfony\Component\HttpFoundation\RedirectResponse',
+            \Symfony\Component\HttpFoundation\RedirectResponse::class,
             $response
         );
 
@@ -140,7 +146,8 @@ class SpeakersControllerTest extends \PHPUnit_Framework_TestCase
         // All of this stuff should be done in a transaction
         $spot->shouldReceive('config->connection->beginTransaction')->once();
         $spot->shouldReceive('config->connection->commit')->once();
-        
+
+        unset($this->app['spot']);
         $this->app['spot'] = $spot;
 
         // Execute the controller and capture the output

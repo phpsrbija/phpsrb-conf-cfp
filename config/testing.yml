@@ -4,7 +4,7 @@ application:
   email: contact@openconf.com
   eventurl: http://localhost
   event_location: Miami, FL
-  enddate: Oct. 14th, 2116
+  enddate: Oct. 14th, 2018
   show_submission_count: false
   airport: MIA
   arrival: 2014-10-26
@@ -12,6 +12,7 @@ application:
   secure_ssl: false
   online_conference: false
   date_format: m-d-Y
+  coc_link: http://confcodeofconduct.com
 
 
 api:

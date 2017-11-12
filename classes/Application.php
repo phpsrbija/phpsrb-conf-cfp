@@ -2,13 +2,9 @@
 
 namespace OpenCFP;
 
-use Igorw\Silex\ChainConfigDriver;
-use Igorw\Silex\ConfigServiceProvider;
-use Igorw\Silex\JsonConfigDriver;
-use Igorw\Silex\PhpConfigDriver;
-use Igorw\Silex\TomlConfigDriver;
 use League\OAuth2\Server\Exception\OAuthException;
 use OpenCFP\Provider\ApplicationServiceProvider;
+use OpenCFP\Provider\CallForProposalProvider;
 use OpenCFP\Provider\ControllerResolverServiceProvider;
 use OpenCFP\Provider\DatabaseServiceProvider;
 use OpenCFP\Provider\Gateways\ApiGatewayProvider;
@@ -19,15 +15,18 @@ use OpenCFP\Provider\ImageProcessorProvider;
 use OpenCFP\Provider\ResetEmailerServiceProvider;
 use OpenCFP\Provider\SentryServiceProvider;
 use OpenCFP\Provider\SpotServiceProvider;
+use OpenCFP\Provider\TalkFilterProvider;
+use OpenCFP\Provider\TalkRatingProvider;
 use OpenCFP\Provider\TwigServiceProvider;
 use OpenCFP\Provider\YamlConfigDriver;
 use Silex\Application as SilexApplication;
+use Silex\Provider\CsrfServiceProvider;
 use Silex\Provider\FormServiceProvider;
+use Silex\Provider\LocaleServiceProvider;
 use Silex\Provider\MonologServiceProvider;
 use Silex\Provider\SessionServiceProvider;
 use Silex\Provider\SwiftmailerServiceProvider;
 use Silex\Provider\TranslationServiceProvider;
-use Silex\Provider\UrlGeneratorServiceProvider;
 use Silex\Provider\ValidatorServiceProvider;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -47,6 +46,7 @@ class Application extends SilexApplication
 
         $this['path'] = $basePath;
         $this['env'] = $environment;
+        $this['debug'] = true;
 
         $this->bindPathsInApplicationContainer();
         $this->bindConfiguration();
@@ -63,10 +63,11 @@ class Application extends SilexApplication
         // Services...
         $this->register(new SessionServiceProvider);
         $this->register(new FormServiceProvider);
-        $this->register(new UrlGeneratorServiceProvider);
+        $this->register(new CsrfServiceProvider);
         $this->register(new ControllerResolverServiceProvider);
         $this->register(new DatabaseServiceProvider);
         $this->register(new ValidatorServiceProvider);
+        $this->register(new LocaleServiceProvider);
         $this->register(new TranslationServiceProvider);
         $this->register(new MonologServiceProvider, [
             'monolog.logfile' => $this->config('log.path') ?: "{$basePath}/log/app.log",
@@ -86,12 +87,16 @@ class Application extends SilexApplication
             ],
         ]);
 
+        $this->register(new CallForProposalProvider());
         $this->register(new SentryServiceProvider);
-        $this->register(new TwigServiceProvider);
+        $app = $this;
+        $this->register(new TwigServiceProvider($app));
         $this->register(new HtmlPurifierServiceProvider);
         $this->register(new SpotServiceProvider);
         $this->register(new ImageProcessorProvider);
         $this->register(new ResetEmailerServiceProvider());
+        $this->register(new TalkRatingProvider());
+        $this->register(new TalkFilterProvider());
 
         // Application Services...
         $this->register(new ApplicationServiceProvider);
@@ -140,20 +145,17 @@ class Application extends SilexApplication
      */
     protected function bindConfiguration()
     {
-        /**
-         * Replace reference to `ChainConfigDriver` with `null` when PR below is merged.
-         * Symfony's YAML package deprecated allowing a path to be passed to `parse` method.
-         * This was causing our test-suite to fail. When this is merged, we can upgrade and
-         * all will be well again.
-         *
-         * @see https://github.com/igorw/ConfigServiceProvider/pull/46
-         */
-        $this->register(new ConfigServiceProvider($this->configPath(), [], new ChainConfigDriver([
-            new PhpConfigDriver(),
-            new YamlConfigDriver(), // This is ours; in OpenCFP/Provider/YamlConfigDriver.
-            new JsonConfigDriver(),
-            new TomlConfigDriver(),
-        ]), 'config'));
+        $driver = new YamlConfigDriver();
+
+        if (!file_exists($this->configPath())) {
+            throw new \InvalidArgumentException(
+                sprintf("The config file '%s' does not exist.", $this->configPath())
+            );
+        }
+
+        if ($driver->supports($this->configPath())) {
+            $this['config'] = $driver->load($this->configPath());
+        }
 
         if (! $this->isProduction()) {
             $this['debug'] = true;
@@ -184,6 +186,7 @@ class Application extends SilexApplication
 
     /**
      * Get the base path for the application.
+     *
      * @return string
      */
     public function basePath()
@@ -193,6 +196,7 @@ class Application extends SilexApplication
 
     /**
      * Get the configuration path.
+     *
      * @return string
      */
     public function configPath()
@@ -202,61 +206,68 @@ class Application extends SilexApplication
 
     /**
      * Get the uploads path.
+     *
      * @return string
      */
     public function uploadPath()
     {
-        return $this->basePath() . "/web/uploads";
+        return $this->basePath() . '/web/uploads';
     }
 
     /**
      * Get the templates path.
+     *
      * @return string
      */
     public function templatesPath()
     {
-        return $this->basePath() . "/templates";
+        return $this->basePath() . '/resources/views';
     }
 
     /**
      * Get the public path.
+     *
      * @return string
      */
     public function publicPath()
     {
-        return $this->basePath() . "/web";
+        return $this->basePath() . '/web';
     }
 
     /**
      * Get the assets path.
+     *
      * @return string
      */
     public function assetsPath()
     {
-        return $this->basePath() . "/web/assets";
+        return $this->basePath() . '/web/assets';
     }
 
     /**
      * Get the Twig cache path.
+     *
      * @return string
      */
     public function cacheTwigPath()
     {
-        return $this->basePath() . "/cache/twig";
+        return $this->basePath() . '/cache/twig';
     }
 
     /**
      * Get the HTML Purifier cache path.
+     *
      * @return string
      */
     public function cachePurifierPath()
     {
-        return $this->basePath() . "/cache/htmlpurifier";
+        return $this->basePath() . '/cache/htmlpurifier';
     }
 
     /**
      * Tells if application is in production environment.
-     * @return boolean
+     *
+     * @return bool
      */
     public function isProduction()
     {
@@ -265,7 +276,8 @@ class Application extends SilexApplication
 
     /**
      * Tells if application is in development environment.
-     * @return boolean
+     *
+     * @return bool
      */
     public function isDevelopment()
     {
@@ -274,7 +286,8 @@ class Application extends SilexApplication
 
     /**
      * Tells if application is in testing environment.
-     * @return boolean
+     *
+     * @return bool
      */
     public function isTesting()
     {
@@ -283,10 +296,7 @@ class Application extends SilexApplication
 
     private function registerGlobalErrorHandler(Application $app)
     {
-        $app->error(function (\Exception $e, $code) use ($app) {
-            /** @var Request $request */
-            $request = $app['request'];
-
+        $app->error(function (\Exception $e, Request $request, $code) use ($app) {
             if (in_array('application/json', $request->getAcceptableContentTypes())) {
                 $headers = [];
 

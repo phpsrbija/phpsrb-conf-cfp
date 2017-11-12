@@ -1,7 +1,8 @@
-<?php namespace OpenCFP\Provider;
+<?php
+
+namespace OpenCFP\Provider;
 
 use OpenCFP\Http\Controller\BaseController;
-use Silex\Application;
 
 class ControllerResolver extends \Silex\ControllerResolver
 {
@@ -9,12 +10,13 @@ class ControllerResolver extends \Silex\ControllerResolver
      * We're overriding this protected method to auto-inject the application container
      * into our controllers.
      *
-     * @param  string      $controller
+     * @param string $controller
+     *
      * @return array|mixed
      */
     protected function createController($controller)
     {
-        if (false !== strpos($controller, '::')) {
+        if (strpos($controller, '::') !== false) {
             $instance = parent::createController($controller);
 
             // Injects container from side rather than constructor.
@@ -25,7 +27,7 @@ class ControllerResolver extends \Silex\ControllerResolver
             return $instance;
         }
 
-        if (false === strpos($controller, ':')) {
+        if (strpos($controller, ':') === false) {
             throw new \LogicException(sprintf('Unable to parse the controller name "%s".', $controller));
         }
 

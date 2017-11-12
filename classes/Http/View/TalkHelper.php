@@ -4,6 +4,7 @@ namespace OpenCFP\Http\View;
 
 /**
  * Class TalkHelper
+ *
  * @package OpenCFP\Http\View
  */
 class TalkHelper
@@ -25,6 +26,7 @@ class TalkHelper
 
     /**
      * TalkHelper constructor.
+     *
      * @param $categories
      * @param $levels
      * @param $types
@@ -38,6 +40,7 @@ class TalkHelper
 
     /**
      * @param $category
+     *
      * @return mixed
      */
     public function getCategoryDisplayName($category)
@@ -45,12 +48,13 @@ class TalkHelper
         if (isset($this->categories[$category])) {
             return $this->categories[$category];
         }
-        
+
         return $category;
     }
 
     /**
      * @param $type
+     *
      * @return mixed
      */
     public function getTypeDisplayName($type)
@@ -64,6 +68,7 @@ class TalkHelper
 
     /**
      * @param $level
+     *
      * @return mixed
      */
     public function getLevelDisplayName($level)

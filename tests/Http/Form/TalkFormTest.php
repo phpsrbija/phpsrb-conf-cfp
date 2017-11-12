@@ -4,7 +4,7 @@ namespace OpenCFP\Test\Http\Form;
 
 use OpenCFP\Test\Util\Faker\GeneratorTrait;
 
-class TalkFormTest extends \PHPUnit_Framework_TestCase
+class TalkFormTest extends \PHPUnit\Framework\TestCase
 {
     use GeneratorTrait;
 
@@ -21,8 +21,9 @@ class TalkFormTest extends \PHPUnit_Framework_TestCase
      *
      * @test
      * @dataProvider hasRequiredProvider
-     * @param array   $rawData  serialized user-submitted data
-     * @param boolean $response
+     *
+     * @param array $rawData  serialized user-submitted data
+     * @param bool  $response
      */
     public function correctlyDetectsRequiredFields($rawData, $response)
     {
@@ -32,7 +33,10 @@ class TalkFormTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(
             $response,
             $form->hasRequiredFields(),
-            '\OpenCFP\Form\TalkForm::hasRequired() did not work correctly'
+            sprintf(
+                '%s::hasRequired() did not work correctly',
+                \OpenCFP\Http\Form\TalkForm::class
+            )
         );
     }
 
@@ -60,7 +64,7 @@ class TalkFormTest extends \PHPUnit_Framework_TestCase
             'user_id' => 1,
         ];
         $extendedData = $goodData;
-        $extendedData['extra'] = "Extra data in \$_POST but we ignore it";
+        $extendedData['extra'] = 'Extra data in $_POST but we ignore it';
 
         return [
             [serialize($badData), false],
@@ -75,18 +79,21 @@ class TalkFormTest extends \PHPUnit_Framework_TestCase
      *
      * @test
      * @dataProvider hasNoDesiredOrSponsorProvider
-     * @param array   $rawData  serialized user-submitted data
-     * @param boolean $response
+     *
+     * @param array $rawData  serialized user-submitted data
+     * @param bool  $response
      */
     public function submitsTalkWhenNoDesiredOrSponrosIncluded($rawData, $response)
     {
         $data = unserialize($rawData);
         $form = new \OpenCFP\Http\Form\TalkForm($data, $this->purifier);
-        
         $this->assertEquals(
             $response,
             $form->hasRequiredFields(),
-            '\OpenCFP\Form\TalkForm::hasRequired() did not work correctly'
+            sprintf(
+                '%s::hasRequired() did not work correctly',
+                \OpenCFP\Http\Form\TalkForm::class
+            )
         );
     }
 
@@ -118,8 +125,9 @@ class TalkFormTest extends \PHPUnit_Framework_TestCase
      *
      * @test
      * @dataProvider titleValidatesProvider
-     * @param string  $title
-     * @param boolean $expectedResponse
+     *
+     * @param string $title
+     * @param bool   $expectedResponse
      */
     public function titleValidatesCorrectly($title, $expectedResponse)
     {
@@ -130,7 +138,10 @@ class TalkFormTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(
             $expectedResponse,
             $form->validateTitle(),
-            '\OpenCFP\Form\TalkForm::validateTitle() did not apply validation rules correctly'
+            sprintf(
+                '%s::validateTitle() did not apply validation rules correctly',
+                \OpenCFP\Http\Form\TalkForm::class
+            )
         );
     }
 
@@ -146,8 +157,8 @@ class TalkFormTest extends \PHPUnit_Framework_TestCase
         return [
             [substr($faker->text(90), 0, 90), true],
             [null, false],
-            ["This is a string that could be more than 100 characters long but will we really know for sure until I check it out?", false],
-            ["A little bit of this & that", true],
+            ['This is a string that could be more than 100 characters long but will we really know for sure until I check it out?', false],
+            ['A little bit of this & that', true],
         ];
     }
 
@@ -156,8 +167,9 @@ class TalkFormTest extends \PHPUnit_Framework_TestCase
      *
      * @test
      * @dataProvider descriptionValidatesProvider
-     * @param string  $description
-     * @param boolean $expectedResponse
+     *
+     * @param string $description
+     * @param bool   $expectedResponse
      */
     public function descriptionValidatesCorrectly($description, $expectedResponse)
     {
@@ -168,7 +180,10 @@ class TalkFormTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(
             $expectedResponse,
             $form->validateDescription(),
-            '\OpenCFP\Form\TalkForm::validateDescription() did not apply validation rules correctly'
+            sprintf(
+                '%s::validateDescription() did not apply validation rules correctly',
+                \OpenCFP\Http\Form\TalkForm::class
+            )
         );
     }
 
@@ -193,26 +208,34 @@ class TalkFormTest extends \PHPUnit_Framework_TestCase
      *
      * @test
      * @dataProvider typeProvider
-     * @param string  $type
-     * @param boolean $expectedResponse
+     *
+     * @param string $type
+     * @param bool   $expectedResponse
      */
     public function typeValidatesCorrectly($type, $expectedResponse)
     {
         $data = ['type' => $type];
-        $form = new \OpenCFP\Http\Form\TalkForm($data, $this->purifier, ['types' => ['regular' => 'Regular', 'tutorial' => 'Tutorial']]);
+        $form = new \OpenCFP\Http\Form\TalkForm(
+            $data,
+            $this->purifier,
+            ['types' => ['regular' => 'Regular', 'tutorial' => 'Tutorial']]
+        );
         $form->sanitize();
 
         $this->assertEquals(
             $expectedResponse,
             $form->validateType(),
-            '\OpenCFP\Form\TalkForm::validateType() did not apply validation rules correctly'
+            sprintf(
+                '%s::validateType() did not apply validation rules correctly',
+                \OpenCFP\Http\Form\TalkForm::class
+            )
         );
     }
 
     /**
      * Data provider for typeValidatesCorrectly
      *
-     * @return boolean
+     * @return bool
      */
     public function typeProvider()
     {
@@ -232,8 +255,9 @@ class TalkFormTest extends \PHPUnit_Framework_TestCase
      *
      * @test
      * @dataProvider categoryProvider
-     * @param string  $category
-     * @param boolean $expectedResponse
+     *
+     * @param string $category
+     * @param bool   $expectedResponse
      */
     public function categoryValidatesCorrectly($category, $expectedResponse)
     {
@@ -244,59 +268,23 @@ class TalkFormTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(
             $expectedResponse,
             $form->validateCategory(),
-            '\OpenCFP\Form\TalkForm::validateType() did not apply validation rules correctly'
+            sprintf(
+                '%s::validateType() did not apply validation rules correctly',
+                \OpenCFP\Http\Form\TalkForm::class
+            )
         );
     }
 
     /**
      * Data provider for typeValidatesCorrectly
      *
-     * @return boolean
+     * @return bool
      */
     public function categoryProvider()
     {
         return [
             ['test1', true],
             ['test2', true],
-            ['foo', false],
-            [null, false],
-            [false, false],
-            [1, false],
-            [true, false],
-        ];
-    }
-
-    /**
-     * Test that validates the talk type
-     *
-     * @test
-     * @dataProvider levelProvider
-     * @param string  $level
-     * @param boolean $expectedResponse
-     */
-    public function levelValidatesCorrectly($level, $expectedResponse)
-    {
-        $data = ['level' => $level];
-        $form = new \OpenCFP\Http\Form\TalkForm($data, $this->purifier, ['levels' => ['entry' => 'Entry', 'advanced' => 'Advanced']]);
-        $form->sanitize();
-
-        $this->assertEquals(
-            $expectedResponse,
-            $form->validateLevel(),
-            '\OpenCFP\Form\TalkForm::validateType() did not apply validation rules correctly'
-        );
-    }
-
-    /**
-     * Data provider for typeValidatesCorrectly
-     *
-     * @return boolean
-     */
-    public function levelProvider()
-    {
-        return [
-            ['advanced', true],
-            ['entry', true],
             ['foo', false],
             [null, false],
             [false, false],
@@ -324,6 +312,52 @@ class TalkFormTest extends \PHPUnit_Framework_TestCase
             [true, false, false],
             [false, false, false],
             ['user', false, false],
+        ];
+    }
+
+    /**
+     * Test that validates the talk type
+     *
+     * @test
+     * @dataProvider levelProvider
+     *
+     * @param string $level
+     * @param bool   $expectedResponse
+     */
+    public function levelValidatesCorrectly($level, $expectedResponse)
+    {
+        $data = ['level' => $level];
+        $form = new \OpenCFP\Http\Form\TalkForm(
+            $data,
+            $this->purifier,
+            ['levels' => ['entry' => 'Entry', 'advanced' => 'Advanced']]
+        );
+        $form->sanitize();
+        $this->assertEquals(
+            $expectedResponse,
+            $form->validateLevel(),
+            sprintf(
+                '%s::validateType() did not apply validation rules correctly',
+                \OpenCFP\Http\Form\TalkForm::class
+            )
+        );
+    }
+
+    /**
+     * Data provider for levelValidatesCorrectly
+     *
+     * @return array
+     */
+    public function levelProvider()
+    {
+        return [
+            ['advanced', true],
+            ['entry', true],
+            ['foo', false],
+            [null, false],
+            [false, false],
+            [1, false],
+            [true, false],
         ];
     }
 }

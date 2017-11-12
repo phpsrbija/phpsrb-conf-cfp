@@ -7,21 +7,26 @@ use Illuminate\Database\Capsule\Manager as Capsule;
 use League\OAuth2\Server\ResourceServer;
 use OpenCFP\Application\Speakers;
 use OpenCFP\Domain\CallForProposal;
+use OpenCFP\Domain\Model\Airport;
+use OpenCFP\Domain\Services\AccountManagement;
 use OpenCFP\Domain\Services\AirportInformationDatabase;
+use OpenCFP\Domain\Services\Authentication;
 use OpenCFP\Domain\Services\EventDispatcher;
+use OpenCFP\Domain\Services\IdentityProvider;
 use OpenCFP\Infrastructure\Auth\OAuthIdentityProvider;
+use OpenCFP\Infrastructure\Auth\SentryAccountManagement;
+use OpenCFP\Infrastructure\Auth\SentryAuthentication;
 use OpenCFP\Infrastructure\Auth\SentryIdentityProvider;
 use OpenCFP\Infrastructure\Crypto\PseudoRandomStringGenerator;
 use OpenCFP\Infrastructure\OAuth\AccessTokenStorage;
 use OpenCFP\Infrastructure\OAuth\ClientStorage;
 use OpenCFP\Infrastructure\OAuth\ScopeStorage;
 use OpenCFP\Infrastructure\OAuth\SessionStorage;
-use OpenCFP\Infrastructure\Persistence\IlluminateAirportInformationDatabase;
 use OpenCFP\Infrastructure\Persistence\SpotSpeakerRepository;
 use OpenCFP\Infrastructure\Persistence\SpotTalkRepository;
+use Pimple\Container;
+use Pimple\ServiceProviderInterface;
 use RandomLib\Factory;
-use Silex\Application;
-use Silex\ServiceProviderInterface;
 use Spot\Locator;
 
 class ApplicationServiceProvider implements ServiceProviderInterface
@@ -29,9 +34,41 @@ class ApplicationServiceProvider implements ServiceProviderInterface
     /**
      * {@inheritdoc}
      */
-    public function register(Application $app)
+    public function register(Container $app)
     {
-        $app['application.speakers'] = $app->share(function ($app) {
+        $app[AccountManagement::class] = function ($app) {
+            return new SentryAccountManagement($app['sentry']);
+        };
+
+        $app[IdentityProvider::class] = function ($app) {
+            $userMapper = $app['spot']->mapper(\OpenCFP\Domain\Entity\User::class);
+            return new SentryIdentityProvider($app['sentry'], new SpotSpeakerRepository($userMapper));
+        };
+
+        $app[Authentication::class] = function ($app) {
+            return new SentryAuthentication($app['sentry']);
+        };
+
+        $app[Capsule::class] = function ($app) {
+            $capsule = new Capsule;
+
+            $capsule->addConnection([
+                'driver'    => 'mysql',
+                'host'      => $app->config('database.host'),
+                'database'  => $app->config('database.database'),
+                'username'  => $app->config('database.user'),
+                'password'  => $app->config('database.password'),
+                'charset'   => 'utf8',
+                'collation' => 'utf8_unicode_ci',
+                'prefix'    => '',
+            ]);
+
+            $capsule->setAsGlobal();
+            $capsule->bootEloquent();
+            return $capsule;
+        };
+
+        $app['application.speakers'] = function ($app) {
             /* @var Locator $spot */
             $spot = $app['spot'];
             
@@ -49,32 +86,17 @@ class ApplicationServiceProvider implements ServiceProviderInterface
                 new SpotTalkRepository($talkMapper),
                 new EventDispatcher()
             );
-        });
+        };
 
-        $app[AirportInformationDatabase::class] = $app->share(function ($app) {
-            $capsule = new Capsule;
+        $app[AirportInformationDatabase::class] = function ($app) {
+            return new Airport;
+        };
 
-            $capsule->addConnection([
-                'driver'    => 'mysql',
-                'host'      => $app->config('database.host'),
-                'database'  => $app->config('database.database'),
-                'username'  => $app->config('database.user'),
-                'password'  => $app->config('database.password'),
-                'charset'   => 'utf8',
-                'collation' => 'utf8_unicode_ci',
-                'prefix'    => '',
-            ]);
-
-            $capsule->setAsGlobal();
-
-            return new IlluminateAirportInformationDatabase($capsule);
-        });
-
-        $app['security.random'] = $app->share(function ($app) {
+        $app['security.random'] = function ($app) {
             return new PseudoRandomStringGenerator(new Factory());
-        });
+        };
 
-        $app['oauth.resource'] = $app->share(function ($app) {
+        $app['oauth.resource'] = function ($app) {
             $sessionStorage = new SessionStorage();
             $accessTokenStorage = new AccessTokenStorage();
             $clientStorage = new ClientStorage();
@@ -88,9 +110,9 @@ class ApplicationServiceProvider implements ServiceProviderInterface
             );
 
             return $server;
-        });
+        };
 
-        $app['application.speakers.api'] = $app->share(function ($app) {
+        $app['application.speakers.api'] = function ($app) {
             /* @var Locator $spot */
             $spot = $app['spot'];
             
@@ -105,13 +127,6 @@ class ApplicationServiceProvider implements ServiceProviderInterface
                 new SpotTalkRepository($talkMapper),
                 new EventDispatcher()
             );
-        });
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function boot(Application $app)
-    {
+        };
     }
 }

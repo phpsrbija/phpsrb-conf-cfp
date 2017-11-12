@@ -13,6 +13,11 @@ class RequestCleaner
      */
     private $purifier;
 
+    /**
+     * RequestCleaner constructor.
+     *
+     * @param HTMLPurifier $purifier
+     */
     public function __construct(HTMLPurifier $purifier)
     {
         $this->purifier = $purifier;
@@ -24,6 +29,9 @@ class RequestCleaner
         $request->request->replace($this->clean($request->request->all()));
     }
 
+    /**
+     * @param array $data
+     */
     private function clean(array $data)
     {
         $sanitized = [];
@@ -32,8 +40,11 @@ class RequestCleaner
             if (is_array($value)) {
                 $sanitized[$key] = $this->clean($value);
             } else {
-                $sanitized[$key] = $this->purifier->purify($value);
-                ;
+                $sanitized[$key] = preg_replace(
+                    ['/&amp;/', '/&lt;\b/', '/\b&gt;/'],
+                    ['&', '<', '>'],
+                    $this->purifier->purify($value)
+                );
             }
         }
 

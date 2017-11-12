@@ -2,7 +2,9 @@
 
 namespace OpenCFP\Console\Command;
 
+use Cartalyst\Sentry\Users\UserExistsException;
 use OpenCFP\Console\BaseCommand;
+use OpenCFP\Domain\Services\AccountManagement;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -17,9 +19,10 @@ class UserCreateCommand extends BaseCommand
             ->setDefinition([
                 new InputOption('first_name', 'f', InputOption::VALUE_REQUIRED, 'First Name of the user to create', null),
                 new InputOption('last_name', 'l', InputOption::VALUE_REQUIRED, 'Last Name of the user to create', null),
-                new InputOption('email', 'e',  InputOption::VALUE_REQUIRED, 'Email of the user to create', null),
-                new InputOption('password', 'p',  InputOption::VALUE_REQUIRED, 'Password of the user to create', null),
+                new InputOption('email', 'e', InputOption::VALUE_REQUIRED, 'Email of the user to create', null),
+                new InputOption('password', 'p', InputOption::VALUE_REQUIRED, 'Password of the user to create', null),
                 new InputOption('admin', 'a', InputOption::VALUE_NONE, 'Promote to administrator', null),
+                new InputOption('reviewer', 'r', InputOption::VALUE_NONE, 'Promote to reviewer', null),
             ])
             ->setDescription('Creates a new user');
     }
@@ -36,13 +39,13 @@ class UserCreateCommand extends BaseCommand
         $io->section('Creating User');
 
         $user = $this->createUser([
-          'first_name' => $input->getOption('first_name'),
-          'last_name' => $input->getOption('last_name'),
-          'password' => $input->getOption('password'),
-          'email' => $input->getOption('email'),
+            'first_name' => $input->getOption('first_name'),
+            'last_name' => $input->getOption('last_name'),
+            'password' => $input->getOption('password'),
+            'email' => $input->getOption('email'),
         ]);
 
-        if (false === $user) {
+        if ($user == false) {
             $io->error('User Already Exists!');
             return 1;
         }
@@ -51,7 +54,11 @@ class UserCreateCommand extends BaseCommand
 
         if ($input->getOption('admin')) {
             $io->block('Promoting to admin.');
-            $this->promote($user);
+            $this->promoteTo($user);
+        }
+        if ($input->getOption('reviewer')) {
+            $io->block('Promoting to reviewer.');
+            $this->promoteTo($user, 'Reviewer');
         }
 
         $io->success('User Created!');
@@ -61,18 +68,17 @@ class UserCreateCommand extends BaseCommand
     {
         try {
             $user_data = [
-              'first_name' => $data['first_name'],
-              'last_name' => $data['last_name'],
-              'email' => $data['email'],
-              'password' => $data['password'],
-              'activated' => 1,
-          ];
+                'first_name' => $data['first_name'],
+                'last_name' => $data['last_name'],
+                'email' => $data['email'],
+                'password' => $data['password'],
+            ];
 
-          /* @var Sentry $sentry */
-          $sentry = $this->app['sentry'];
+            /** @var AccountManagement $accounts */
+            $accounts = $this->app[AccountManagement::class];
 
-            $user = $sentry->getUserProvider()->create($user_data);
-
+            $user = $accounts->create($data['email'], $data['password'], $user_data);
+            $accounts->activate($user->getLogin());
 
             return $user;
         } catch (UserExistsException $e) {
@@ -80,20 +86,20 @@ class UserCreateCommand extends BaseCommand
         }
     }
 
-    private function promote($user)
+    private function promoteTo($user, $role = 'Admin')
     {
-        if ($user->hasAccess('admin')) {
+        if ($user->hasAccess(\strtolower($role))) {
             $io->error(sprintf(
-              'Account with email %s already is in the Admin group.',
-              $email
-          ));
+                'Account with email %s already is in the Admin group.',
+                $email
+            ));
 
             return false;
         }
 
-        $sentry = $this->app['sentry'];
-        $adminGroup = $sentry->getGroupProvider()->findByName('Admin');
-        $user->addGroup($adminGroup);
+        /** @var AccountManagement $accounts */
+        $accounts = $this->app[AccountManagement::class];
+        $accounts->promoteTo($user->getLogin(), $role);
 
         return true;
     }

@@ -28,12 +28,14 @@ class User extends Entity
             'updated_at' => ['type' => 'datetime', 'value' => new \DateTime()],
             'company' => ['type' => 'string', 'length' => 255],
             'twitter' => ['type' => 'string', 'length' => 255],
+            'url' => ['type' => 'string', 'length' => 255],
             'airport' => ['type' => 'string', 'length' => 5],
             'hotel' => ['type' => 'smallint', 'value' => 0],
             'transportation' => ['type' => 'smallint', 'value' => 0],
             'info' => ['type' => 'text'],
             'bio' => ['type' => 'text'],
             'photo_path' => ['type' => 'string', 'length' => 255],
+            'has_made_profile' => ['type' => 'smallint', 'value' => 0],
         ];
     }
 
@@ -48,6 +50,7 @@ class User extends Entity
 
     /**
      * Getter for permissions property
+     *
      * @return array
      */
     protected function getPermissions()
@@ -57,15 +60,17 @@ class User extends Entity
 
     /**
      * Setter for permissions property
-     * @param  string|array $permissions JSON string or an array of permissions
-     * @return string       JSON
+     *
+     * @param string|array $permissions JSON string or an array of permissions
+     *
+     * @return string JSON
      */
     protected function setPermissions($permissions)
     {
         $json = $permissions;
 
         if (is_string($permissions) && json_decode($permissions) === null) {
-            return "{}";
+            return '{}';
         }
 
         if (is_array($permissions)) {

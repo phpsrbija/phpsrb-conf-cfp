@@ -3,8 +3,8 @@
 namespace OpenCFP\Http\Controller;
 
 use OpenCFP\Application\Speakers;
+use OpenCFP\Domain\CallForProposal;
 use OpenCFP\Domain\Services\NotAuthenticatedException;
-use Silex\Application;
 
 class DashboardController extends BaseController
 {
@@ -24,32 +24,15 @@ class DashboardController extends BaseController
         try {
             $profile = $speakers->findProfile();
 
+            /** @var CallForProposal $cfp */
+            $cfp = $this->service('callforproposal');
+
             return $this->render('dashboard.twig', [
                 'profile' => $profile,
-                'cfp_open' => $this->isCfpOpen(),
+                'cfp_open' => $cfp->isOpen(),
             ]);
         } catch (NotAuthenticatedException $e) {
             return $this->redirectTo('login');
         }
-    }
-
-    /**
-     * Check to see if the CfP for this app is still open
-     *
-     * @param integer $currentTime
-     *
-     * @return boolean
-     */
-    public function isCfpOpen($currentTime = null)
-    {
-        if (!$currentTime) {
-            $currentTime = strtotime('now');
-        }
-
-        if ($currentTime < strtotime($this->app->config('application.enddate') . ' 11:59 PM')) {
-            return true;
-        }
-
-        return false;
     }
 }

@@ -2,9 +2,8 @@
 
 namespace OpenCFP\Http\Controller;
 
-use Cartalyst\Sentry\Sentry;
 use Cartalyst\Sentry\Users\UserNotFoundException;
-use Exception;
+use OpenCFP\Domain\Services\AccountManagement;
 use OpenCFP\Http\Form\ForgotForm;
 use OpenCFP\Http\Form\ResetForm;
 use Symfony\Component\HttpFoundation\Request;
@@ -15,26 +14,26 @@ class ForgotController extends BaseController
 
     public function indexAction()
     {
-        $form = $this->service('form.factory')->create(new ForgotForm());
-
+        $form = $this->service('form.factory')->createBuilder(ForgotForm::class)->getForm();
         $data = [
             'form' => $form->createView(),
-            'current_page' => "Forgot Password",
+            'current_page' => 'Forgot Password',
         ];
-
-        return $this->render('user/forgot_password.twig', $data);
+        return $this->render('security/forgot_password.twig', $data);
     }
 
     public function sendResetAction(Request $req)
     {
-        $form = $this->service('form.factory')->create(new ForgotForm());
-        $form->bind($req);
+        $form = $this->service('form.factory')
+            ->createBuilder(ForgotForm::class)
+            ->getForm();
+        $form->handleRequest($req);
 
         if (!$form->isValid()) {
             $this->service('session')->set('flash', [
                 'type' => 'error',
                 'short' => 'Error',
-                'ext' => "Please enter a properly formatted email address",
+                'ext' => 'Please enter a properly formatted email address',
             ]);
 
             return $this->redirectTo('forgot_password');
@@ -44,13 +43,12 @@ class ForgotController extends BaseController
         $data = $form->getData();
 
         try {
-            /* @var Sentry $sentry */
-            $sentry = $this->service('sentry');
+            /** @var AccountManagement $accounts */
+            $accounts = $this->service(AccountManagement::class);
 
-            $user = $sentry->getUserProvider()->findByLogin($data['email']);
+            $user = $accounts->findByLogin($data['email']);
         } catch (UserNotFoundException $e) {
             $this->service('session')->set('flash', $this->successfulSendFlashParameters($data['email']));
-
             return $this->redirectTo('forgot_password');
         }
 
@@ -61,7 +59,7 @@ class ForgotController extends BaseController
             $this->service('session')->set('flash', [
                 'type' => 'error',
                 'short' => 'Error',
-                'ext' => "We were unable to send your password reset request. Please try again",
+                'ext' => 'We were unable to send your password reset request. Please try again',
             ]);
 
             return $this->redirectTo('forgot_password');
@@ -75,16 +73,16 @@ class ForgotController extends BaseController
     public function resetAction(Request $req)
     {
         if (empty($req->get('reset_code'))) {
-            throw new Exception();
+            throw new \Exception();
         }
 
-        $errorMessage = "The reset you have requested appears to be invalid, please try again.";
+        $errorMessage = 'The reset you have requested appears to be invalid, please try again.';
         $error = 0;
         try {
-            /* @var Sentry $sentry */
-            $sentry = $this->service('sentry');
+            /** @var AccountManagement $accounts */
+            $accounts = $this->service(AccountManagement::class);
 
-            $user = $sentry->getUserProvider()->findById($req->get('user_id'));
+            $user = $accounts->findById($req->get('user_id'));
 
             if (!$user->checkResetPasswordCode($req->get('reset_code'))) {
                 $error++;
@@ -100,15 +98,15 @@ class ForgotController extends BaseController
                 'ext' => $errorMessage,
             ]);
         }
-
+        
         // Build password form and display it to the user
         $form_options = [
             'user_id' => $req->get('user_id'),
             'reset_code' => $req->get('reset_code'),
         ];
-        $form = $this->service('form.factory')->create(new ResetForm(), $form_options);
+        $form = $this->service('form.factory')->create(new ResetForm());
 
-        $data['form'] = $form->createView();
+        $data['form'] = $form->createView($form_options);
         $data['flash'] = $this->getFlash($this->app);
 
         return $this->render('user/forgot_password.twig', $data);
@@ -120,27 +118,26 @@ class ForgotController extends BaseController
         $reset_code = $req->get('reset_code');
 
         if (empty($reset_code)) {
-            throw new Exception();
+            throw new \Exception();
         }
 
-        $form_options = [
-            'user_id' => $user_id,
-            'reset_code' => $reset_code,
-        ];
-        $form = $this->service('form.factory')->create(new ResetForm(), $form_options);
-
+        $form = $this->service('form.factory')->createBuilder(ResetForm::class)->getForm();
+        $form->handleRequest($req);
+        
         if (! $form->isValid()) {
+            $form->get('user_id')->setData($user_id);
+            $form->get('reset_code')->setData($reset_code);
             return $this->render('user/reset_password.twig', ['form' => $form->createView()]);
         }
-
-        $errorMessage = "The reset you have requested appears to be invalid, please try again.";
+             
+        $errorMessage = 'The reset you have requested appears to be invalid, please try again.';
         $error = 0;
 
         try {
-            /* @var Sentry $sentry */
-            $sentry = $this->service('sentry');
+            /** @var AccountManagement $accounts */
+            $accounts = $this->service(AccountManagement::class);
 
-            $user = $sentry->getUserProvider()->findById($req->get('user_id'));
+            $user = $accounts->findById($req->get('user_id'));
         } catch (UserNotFoundException $e) {
             $error++;
         }
@@ -162,21 +159,27 @@ class ForgotController extends BaseController
 
     public function updatePasswordAction(Request $req)
     {
-        $postArray = $req->request->all();
+        $form = $this->service('form.factory')->createBuilder(ResetForm::class)->getForm();
+        $form->handleRequest($req);
+        
+        if (! $form->isValid()) {
+            return $this->render('user/reset_password.twig', ['form' => $form->createView()]);
+        }
 
-        $user_id = $postArray['reset']['user_id'];
-        $reset_code = $postArray['reset']['reset_code'];
-        $password = $postArray['reset']['password']['password'];
+        $data = $form->getData();
+        $user_id = $data['user_id'];
+        $reset_code = $data['reset_code'];
+        $password = $data['password'];
 
         if (empty($reset_code)) {
-            throw new Exception();
+            throw new \Exception();
         }
 
         try {
-            /* @var Sentry $sentry */
-            $sentry = $this->service('sentry');
+            /** @var AccountManagement $accounts */
+            $accounts = $this->service(AccountManagement::class);
 
-            $user = $sentry->getUserProvider()->findById($user_id);
+            $user = $accounts->findById($user_id);
         } catch (UserNotFoundException $e) {
             echo $e;
             die();
@@ -190,7 +193,7 @@ class ForgotController extends BaseController
             $this->service('session')->set('flash', [
                 'type' => 'error',
                 'short' => 'Error',
-                'ext' => "Please select a different password than your current one.",
+                'ext' => 'Please select a different password than your current one.',
             ]);
 
             return $this->redirectTo('login');
@@ -211,7 +214,7 @@ class ForgotController extends BaseController
         $this->service('session')->set('flash', [
             'type' => 'error',
             'short' => 'Error',
-            'ext' => "Password reset failed, please contact the administrator.",
+            'ext' => 'Password reset failed, please contact the administrator.',
         ]);
 
         return $this->redirectTo('homepage');

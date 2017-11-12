@@ -25,10 +25,10 @@ class ResetEmailer
     private $config_title;
 
     /**
-     * @param \Swift_Mailer $swiftMailer
+     * @param \Swift_Mailer  $swiftMailer
      * @param \Twig_Template $template
-     * @param string $configEmail
-     * @param string $configTitle
+     * @param string         $configEmail
+     * @param string         $configTitle
      */
     public function __construct(\Swift_Mailer $swiftMailer, \Twig_Template $template, $configEmail, $configTitle)
     {
@@ -42,6 +42,7 @@ class ResetEmailer
      * @param string $userId
      * @param string $email
      * @param string $resetCode
+     *
      * @return int
      */
     public function send($userId, $email, $resetCode)
@@ -60,6 +61,7 @@ class ResetEmailer
     /**
      * @param string $userId
      * @param string $resetCode
+     *
      * @return array
      */
     private function parameters($userId, $resetCode)
@@ -77,7 +79,8 @@ class ResetEmailer
 
     /**
      * @param string $email
-     * @param array $parameters
+     * @param array  $parameters
+     *
      * @return \Swift_Message
      */
     private function preparedMessage($email, $parameters)

@@ -2,48 +2,29 @@
 
 namespace OpenCFP\Http\Controller\Admin;
 
-use Cartalyst\Sentry\Sentry;
+use OpenCFP\Domain\Services\Authentication;
 use OpenCFP\Http\Controller\BaseController;
 use Spot\Locator;
-use Symfony\Component\HttpFoundation\Request;
 
 class ExportsController extends BaseController
 {
-    use AdminAccessTrait;
-
-    public function anonymousTalksExportAction(Request $req)
+    public function anonymousTalksExportAction()
     {
-        if (!$this->userHasAccess()) {
-            return $this->redirectTo('dashboard');
-        }
-
         return $this->talksExportAction(false);
     }
 
-    public function attributedTalksExportAction(Request $req)
+    public function attributedTalksExportAction()
     {
-        if (!$this->userHasAccess()) {
-            return $this->redirectTo('dashboard');
-        }
-
         return $this->talksExportAction(true);
     }
 
-    public function selectedTalksExportAction(Request $req)
+    public function selectedTalksExportAction()
     {
-        if (!$this->userHasAccess()) {
-            return $this->redirectTo('dashboard');
-        }
-
         return $this->talksExportAction(true, ['selected' => 1]);
     }
 
-    public function emailExportAction(Request $req)
+    public function emailExportAction()
     {
-        if (!$this->userHasAccess()) {
-            return $this->redirectTo('dashboard');
-        }
-
         /* @var Locator $spot */
         $spot = $this->service('spot');
 
@@ -65,12 +46,9 @@ class ExportsController extends BaseController
 
     private function talksExportAction($attributed, $where = null)
     {
-        $sort = [ "created_at" => "DESC" ];
+        $sort = [ 'created_at' => 'DESC' ];
 
-        /* @var Sentry $sentry */
-        $sentry = $this->service('sentry');
-
-        $admin_user_id = $sentry->getUser()->getId();
+        $admin_user_id = $this->service(Authentication::class)->userId();
         $mapper = $this->service('spot')->mapper('OpenCFP\Domain\Entity\Talk');
         $talks = $mapper->getAllPagerFormatted($admin_user_id, $sort, $attributed, $where);
 
@@ -86,6 +64,32 @@ class ExportsController extends BaseController
         $filename = $attributed ? ($where ? 'selectTalks' : 'talkList') : 'anonymousTalks';
 
         return $this->csvReturn($talks, $filename);
+    }
+
+    /**
+     * Adds a ' in front of items that start with =,+,- or @
+     * This stops the cell from being executed as a formula in excel/google sheets etc.
+     *
+     * @param string $info
+     *
+     * @return string
+     */
+    private function csvFormat($info)
+    {
+        if ($this->startsWith($info, '=')
+                || $this->startsWith($info, '+')
+                || $this->startsWith($info, '-')
+                || $this->startsWith($info, '@')
+            ) {
+            $info = "'". $info;
+        }
+        return $info;
+    }
+
+    private function startsWith($haystack, $needle)
+    {
+        $length = strlen($needle);
+        return (substr($haystack, 0, $length) === $needle);
     }
 
     private function csvReturn($contents, $filename = 'data')
@@ -109,10 +113,12 @@ class ExportsController extends BaseController
 
         $output = fopen('php://output', 'w');
 
-        fputcsv($output, (array_keys($contents[0])));
+        fputcsv($output, array_keys($contents[0]));
 
-        foreach ($contents as $i => $content) {
-            fputcsv($output, (array_values($content)));
+        foreach ($contents as $content) {
+            $content = array_map([$this,'csvFormat'], $content);
+
+            fputcsv($output, array_values($content));
         }
 
         fclose($output);

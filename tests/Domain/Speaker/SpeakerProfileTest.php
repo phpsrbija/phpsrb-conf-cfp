@@ -6,7 +6,7 @@ use OpenCFP\Domain\Entity;
 use OpenCFP\Domain\Speaker\SpeakerProfile;
 use OpenCFP\Test\Util\Faker\GeneratorTrait;
 
-class SpeakerProfileTest extends \PHPUnit_Framework_TestCase
+class SpeakerProfileTest extends \PHPUnit\Framework\TestCase
 {
     use GeneratorTrait;
 
@@ -76,7 +76,7 @@ class SpeakerProfileTest extends \PHPUnit_Framework_TestCase
 
         $this->assertSame($twitter, $profile->getTwitter());
     }
-    
+
     public function testGetInfoReturnsInfo()
     {
         $info = $this->getFaker()->text();
@@ -89,7 +89,7 @@ class SpeakerProfileTest extends \PHPUnit_Framework_TestCase
 
         $this->assertSame($info, $profile->getInfo());
     }
-    
+
     public function testGetBioReturnsBio()
     {
         $bio = $this->getFaker()->text();
@@ -133,7 +133,7 @@ class SpeakerProfileTest extends \PHPUnit_Framework_TestCase
 
         $this->assertFalse($profile->getTransportation());
     }
-    
+
     public function testGetHotelReturnsHotel()
     {
         $hotel = $this->getFaker()->sentence();
@@ -181,6 +181,7 @@ class SpeakerProfileTest extends \PHPUnit_Framework_TestCase
         $lastName = $faker->lastName;
         $email = $faker->email;
         $twitter = $faker->userName;
+        $url = $faker->url;
         $bio = $faker->text();
 
         $speaker = new Entity\User();
@@ -189,6 +190,7 @@ class SpeakerProfileTest extends \PHPUnit_Framework_TestCase
         $speaker->set('last_name', $lastName);
         $speaker->set('email', $email);
         $speaker->set('twitter', $twitter);
+        $speaker->set('url', $url);
         $speaker->set('bio', $bio);
 
         $profile = new SpeakerProfile($speaker);
@@ -197,6 +199,7 @@ class SpeakerProfileTest extends \PHPUnit_Framework_TestCase
             'name' => $firstName . ' ' . $lastName,
             'email' => $email,
             'twitter' => $twitter,
+            'url' => $url,
             'bio' => $bio,
         ];
 

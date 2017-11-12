@@ -4,6 +4,7 @@ namespace OpenCFP\Http\API;
 
 use OpenCFP\ContainerAware;
 use Symfony\Component\HttpFoundation\JsonResponse as Response;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 class ApiController
@@ -102,7 +103,7 @@ class ApiController
     {
         if ($this->statusCode === Response::HTTP_OK) {
             trigger_error(
-                "You need to stellar reason to error with a 200 HTTP status code, Mr. Spock.",
+                'You need to stellar reason to error with a 200 HTTP status code, Mr. Spock.',
                 E_USER_WARNING
             );
         }

@@ -5,7 +5,7 @@ namespace OpenCFP\Test\Http\Form;
 use Mockery as m;
 use OpenCFP\Http\Form\SignupForm;
 
-class SignupFormTest extends \PHPUnit_Framework_TestCase
+class SignupFormTest extends \PHPUnit\Framework\TestCase
 {
     private $purifier;
 
@@ -20,7 +20,7 @@ class SignupFormTest extends \PHPUnit_Framework_TestCase
     public function formRejectsValidationOnInvalidSpeakerPhoto()
     {
         // Mock speaker photo.
-        $photo = m::mock('stdClass');
+        $photo = m::mock(\stdClass::class);
         $photo->shouldReceive('isValid')->andReturn(false);
         $photo->shouldReceive('getErrorMessage')->andReturn('stubbed error message');
 
@@ -53,8 +53,9 @@ class SignupFormTest extends \PHPUnit_Framework_TestCase
      * Verify that emails are being validated correctly
      *
      * @test
-     * @param string  $email
-     * @param boolean $expectedResponse
+     *
+     * @param string $email
+     * @param bool   $expectedResponse
      * @dataProvider emailProvider
      */
     public function emailsAreBeingValidatedCorrectly($email, $expectedResponse)
@@ -80,7 +81,7 @@ class SignupFormTest extends \PHPUnit_Framework_TestCase
         $form = new \OpenCFP\Http\Form\SignupForm($data, $this->purifier);
         $this->assertFalse(
             $form->validateEmail(),
-            "Validating empty email did not fail"
+            'Validating empty email did not fail'
         );
     }
 
@@ -120,6 +121,7 @@ class SignupFormTest extends \PHPUnit_Framework_TestCase
      * and sanitization
      *
      * @test
+     *
      * @param string $passwd
      * @dataProvider properPasswordValidator
      */
@@ -134,7 +136,7 @@ class SignupFormTest extends \PHPUnit_Framework_TestCase
 
         $this->assertTrue(
             $form->validatePasswords(),
-            "Valid passwords did not survive validation and sanitization"
+            'Valid passwords did not survive validation and sanitization'
         );
     }
 
@@ -142,10 +144,11 @@ class SignupFormTest extends \PHPUnit_Framework_TestCase
      * Test that bad passwords are being correctly matched and sanitized
      *
      * @test
-     * @param string  $passwd
-     * @param string  $passwd2
-     * @param string  $expectedMessage
-     * @param boolean $expectedResponse
+     *
+     * @param string $passwd
+     * @param string $passwd2
+     * @param string $expectedMessage
+     * @param bool   $expectedResponse
      * @dataProvider badPasswordProvider
      */
     public function badPasswordsAreBeingCorrectlyDetected($passwd, $passwd2, $expectedMessage, $expectedResponse)
@@ -163,7 +166,7 @@ class SignupFormTest extends \PHPUnit_Framework_TestCase
         $this->assertContains(
             $expectedMessage,
             $form->getErrorMessages(),
-            "Did not get expected error message"
+            'Did not get expected error message'
         );
     }
 
@@ -175,10 +178,10 @@ class SignupFormTest extends \PHPUnit_Framework_TestCase
     public function badPasswordProvider()
     {
         return [
-            ['foo', 'foo', "The submitted password must be at least 5 characters long", false],
-            ['bar', 'foo', "The submitted passwords do not match", false],
-            [null, null, "Missing passwords", false],
-            ['password with spaces', 'password with spaces', "The submitted password contains invalid characters", false],
+            ['foo', 'foo', 'The submitted password must be at least 5 characters long', false],
+            ['bar', 'foo', 'The submitted passwords do not match', false],
+            [null, null, 'Missing passwords', false],
+            ['password with spaces', 'password with spaces', 'The submitted password contains invalid characters', false],
         ];
     }
 
@@ -186,8 +189,9 @@ class SignupFormTest extends \PHPUnit_Framework_TestCase
      * Test that the firstName is being validated correctly
      *
      * @test
-     * @param string  $firstName
-     * @param boolean $expectedResponse
+     *
+     * @param string $firstName
+     * @param bool   $expectedResponse
      * @dataProvider firstNameProvider
      */
     public function firstNameIsValidatedCorrectly($firstName, $expectedResponse)
@@ -229,8 +233,9 @@ class SignupFormTest extends \PHPUnit_Framework_TestCase
      * Test that the lastName is being validated correctly
      *
      * @test
-     * @param string  $lastName
-     * @param boolean $expectedResponse
+     *
+     * @param string $lastName
+     * @param bool   $expectedResponse
      * @dataProvider lastNameProvider
      */
     public function lastNameIsValidatedCorrectly($lastName, $expectedResponse)
@@ -273,8 +278,9 @@ class SignupFormTest extends \PHPUnit_Framework_TestCase
      * fields works correctly
      *
      * @test
-     * @param array   $data
-     * @param boolean $expectedResponse
+     *
+     * @param array $data
+     * @param bool  $expectedResponse
      * @dataProvider validateAllProvider
      */
     public function validateAllWorksCorrectly($data, $expectedResponse)
@@ -283,7 +289,7 @@ class SignupFormTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(
             $expectedResponse,
             $form->validateAll(),
-            "All submitted data did not validate as expected"
+            'All submitted data did not validate as expected'
         );
     }
 
@@ -298,11 +304,12 @@ class SignupFormTest extends \PHPUnit_Framework_TestCase
             'email' => 'test@domain.com',
             'password' => 'xxxxxx',
             'password2' => 'xxxxxx',
-            'first_name' => 'Testy',
-            'last_name' => 'McTesterton',
+            'first_name' => 'Tésty',
+            'last_name' => 'McTestèrton',
+            'url' => 'https://joind.in/user/abc123',
         ];
         $baseDataWithSpeakerInfo = $baseData;
-        $baseDataWithSpeakerInfo['speaker_info'] = "Testing speaker info data";
+        $baseDataWithSpeakerInfo['speaker_info'] = 'Testing speaker info data';
 
         return [
             [$baseData, true],
@@ -314,8 +321,9 @@ class SignupFormTest extends \PHPUnit_Framework_TestCase
      * Test that speaker info is validated correctly
      *
      * @test
-     * @param string  $speakerInfo
-     * @param boolean $expectedResponse
+     *
+     * @param string $speakerInfo
+     * @param bool   $expectedResponse
      * @dataProvider speakerTextProvider
      */
     public function speakerInfoValidatedCorrectly($speakerInfo, $expectedResponse)
@@ -327,7 +335,7 @@ class SignupFormTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(
             $expectedResponse,
             $form->validateSpeakerInfo(),
-            "Speaker info was not validated as expected"
+            'Speaker info was not validated as expected'
         );
     }
 
@@ -335,8 +343,9 @@ class SignupFormTest extends \PHPUnit_Framework_TestCase
      * Test that speaker info is validated correctly
      *
      * @test
-     * @param string  $speakerBio
-     * @param boolean $expectedResponse
+     *
+     * @param string $speakerBio
+     * @param bool   $expectedResponse
      * @dataProvider speakerTextProvider
      */
     public function speakerBioValidatedCorrectly($speakerBio, $expectedResponse)
@@ -347,7 +356,7 @@ class SignupFormTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(
             $expectedResponse,
             $form->validateSpeakerBio(),
-            "Speaker bio was not validated as expected"
+            'Speaker bio was not validated as expected'
         );
     }
 
@@ -368,6 +377,7 @@ class SignupFormTest extends \PHPUnit_Framework_TestCase
      * Test that we get back some sanitized data
      *
      * @test
+     *
      * @param array $inputData
      * @param array $expectedData
      * @dataProvider sanitizationProvider
@@ -380,7 +390,7 @@ class SignupFormTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(
             $expectedData,
             $sanitizedData,
-            "Data was not sanitized properly"
+            'Data was not sanitized properly'
         );
     }
 
@@ -404,7 +414,7 @@ class SignupFormTest extends \PHPUnit_Framework_TestCase
             'password' => 'xxxxxx',
             'password2' => 'xxxxxx',
             'first_name' => 'Testy',
-            'last_name' => "",
+            'last_name' => '',
         ];
 
         $goodDataIn = [
@@ -412,7 +422,7 @@ class SignupFormTest extends \PHPUnit_Framework_TestCase
             'password' => 'xxxxxx',
             'password2' => 'xxxxxx',
             'first_name' => 'Testy',
-            'last_name' => "McTesterton",
+            'last_name' => 'McTesterton',
         ];
 
         $goodDataOut = $goodDataIn;
@@ -422,8 +432,8 @@ class SignupFormTest extends \PHPUnit_Framework_TestCase
             'password' => 'xxxxxx',
             'password2' => 'xxxxxx',
             'first_name' => 'Testy',
-            'last_name' => "McTesterton",
-            'speaker_info' => "<a href=\"http://lolcoin.com/redeem\">Speaker bio</a>",
+            'last_name' => 'McTesterton',
+            'speaker_info' => '<a href="http://lolcoin.com/redeem">Speaker bio</a>',
         ];
 
         $badSpeakerInfoOut = [
@@ -431,8 +441,8 @@ class SignupFormTest extends \PHPUnit_Framework_TestCase
             'password' => 'xxxxxx',
             'password2' => 'xxxxxx',
             'first_name' => 'Testy',
-            'last_name' => "McTesterton",
-            'speaker_info' => "<a href=\"http://lolcoin.com/redeem\">Speaker bio</a>",
+            'last_name' => 'McTesterton',
+            'speaker_info' => '<a href="http://lolcoin.com/redeem">Speaker bio</a>',
         ];
 
         $goodSpeakerInfoIn = [
@@ -440,8 +450,8 @@ class SignupFormTest extends \PHPUnit_Framework_TestCase
             'password' => 'xxxxxx',
             'password2' => 'xxxxxx',
             'first_name' => 'Testy',
-            'last_name' => "McTesterton",
-            'speaker_info' => "Find my bio at http://littlehart.net",
+            'last_name' => 'McTesterton',
+            'speaker_info' => 'Find my bio at http://littlehart.net',
         ];
 
         $goodSpeakerInfoOut = $goodSpeakerInfoIn;

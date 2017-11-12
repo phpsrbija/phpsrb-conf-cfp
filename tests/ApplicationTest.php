@@ -4,13 +4,12 @@ namespace OpenCFP\Test;
 
 use OpenCFP\Application;
 use OpenCFP\Environment;
-use Symfony\Component\HttpFoundation\Session\Session;
-use Symfony\Component\HttpFoundation\Session\Storage\MockFileSessionStorage;
 
 /**
  * @covers OpenCFP\Application
+ * @group db
  */
-class ApplicationTest extends \PHPUnit_Framework_TestCase
+class ApplicationTest extends \PHPUnit\Framework\TestCase
 {
     /** @var Application */
     private $sut;
@@ -21,7 +20,7 @@ class ApplicationTest extends \PHPUnit_Framework_TestCase
     public function it_should_run_and_have_output()
     {
         $this->sut = new Application(BASE_PATH, Environment::testing());
-        $this->sut['session'] = new Session(new MockFileSessionStorage());
+        $this->sut['session.test'] = true;
 
         // We start an output buffer because the Application sends its response to
         // the output buffer as a Symfony Response.

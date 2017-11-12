@@ -1,9 +1,13 @@
-<?php namespace OpenCFP\Console;
+<?php
+
+namespace OpenCFP\Console;
 
 use OpenCFP\Application as ApplicationContainer;
 use OpenCFP\Console\Command\AdminDemoteCommand;
 use OpenCFP\Console\Command\AdminPromoteCommand;
 use OpenCFP\Console\Command\ClearCacheCommand;
+use OpenCFP\Console\Command\ReviewerDemoteCommand;
+use OpenCFP\Console\Command\ReviewerPromoteCommand;
 use OpenCFP\Console\Command\UserCreateCommand;
 use Symfony\Component\Console\Application as ConsoleApplication;
 use Symfony\Component\Console\Command\HelpCommand;
@@ -17,6 +21,11 @@ class Application extends ConsoleApplication
      */
     protected $app;
 
+    /**
+     * Application constructor.
+     *
+     * @param ApplicationContainer $app
+     */
     public function __construct(ApplicationContainer $app)
     {
         parent::__construct('OpenCFP');
@@ -26,6 +35,9 @@ class Application extends ConsoleApplication
         $this->app = $app;
     }
 
+    /**
+     * @return array
+     */
     public function getDefaultCommands()
     {
         return [
@@ -33,11 +45,16 @@ class Application extends ConsoleApplication
             new ListCommand,
             new AdminPromoteCommand,
             new AdminDemoteCommand,
+            new ReviewerPromoteCommand,
+            new ReviewerDemoteCommand,
             new UserCreateCommand,
             new ClearCacheCommand,
         ];
     }
 
+    /**
+     * @return ApplicationContainer
+     */
     public function getContainer()
     {
         return $this->app;

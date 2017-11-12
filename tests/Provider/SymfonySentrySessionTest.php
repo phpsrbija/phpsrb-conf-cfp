@@ -5,7 +5,7 @@ namespace OpenCFP\Test\Provider;
 use OpenCFP\Provider\SymfonySentrySession;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 
-class SymfonySentrySessionTest extends \PHPUnit_Framework_TestCase
+class SymfonySentrySessionTest extends \PHPUnit\Framework\TestCase
 {
     public function testDefaults()
     {
@@ -101,6 +101,6 @@ class SymfonySentrySessionTest extends \PHPUnit_Framework_TestCase
      */
     private function getSessionMock()
     {
-        return $this->getMockBuilder('Symfony\Component\HttpFoundation\Session\SessionInterface')->getMock();
+        return $this->getMockBuilder(\Symfony\Component\HttpFoundation\Session\SessionInterface::class)->getMock();
     }
 }

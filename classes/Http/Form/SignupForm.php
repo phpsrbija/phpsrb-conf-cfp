@@ -21,13 +21,15 @@ class SignupForm extends Form
         'hotel',
         'speaker_photo',
         'agree_coc',
+        'url',
     ];
 
     /**
      * Validate all methods by calling all our validation methods
      *
-     * @param  string  $action
-     * @return boolean
+     * @param string $action
+     *
+     * @return bool
      */
     public function validateAll($action = 'create')
     {
@@ -45,6 +47,7 @@ class SignupForm extends Form
         $valid_last_name = $this->validateLastName();
         $valid_company = $this->validateCompany();
         $valid_twitter = $this->validateTwitter();
+        $valid_url = $this->validateUrl();
         $valid_speaker_photo = $this->validateSpeakerPhoto();
         $valid_speaker_info = true;
         $valid_speaker_bio = true;
@@ -64,6 +67,7 @@ class SignupForm extends Form
             $valid_last_name &&
             $valid_company &&
             $valid_twitter &&
+            $valid_url &&
             $valid_speaker_info &&
             $valid_speaker_bio &&
             $valid_speaker_photo &&
@@ -71,7 +75,7 @@ class SignupForm extends Form
         );
     }
 
-    public function validateSpeakerPhoto()
+    public function validateSpeakerPhoto(): bool
     {
         $allowedMimeTypes = [
             'image/jpeg',
@@ -93,14 +97,14 @@ class SignupForm extends Form
 
         // Check if uploaded file is greater than 5MB
         if ($this->_taintedData['speaker_photo']->getClientSize() > (5 * 1048576)) {
-            $this->_addErrorMessage("Speaker photo can not be larger than 5MB");
+            $this->_addErrorMessage('Speaker photo can not be larger than 5MB');
 
             return false;
         }
 
         // Check if photo is in the mime-type white list
         if (!in_array($this->_taintedData['speaker_photo']->getMimeType(), $allowedMimeTypes)) {
-            $this->_addErrorMessage("Speaker photo must be a jpg or png");
+            $this->_addErrorMessage('Speaker photo must be a jpg or png');
 
             return false;
         }
@@ -112,12 +116,13 @@ class SignupForm extends Form
      * Method that applies validation rules to email
      *
      * @return bool
+     *
      * @internal param string $email
      */
-    public function validateEmail()
+    public function validateEmail(): bool
     {
         if (!isset($this->_taintedData['email']) || $this->_taintedData['email'] == '') {
-            $this->_addErrorMessage("Missing email");
+            $this->_addErrorMessage('Missing email');
 
             return false;
         }
@@ -125,7 +130,7 @@ class SignupForm extends Form
         $response = filter_var($this->_taintedData['email'], FILTER_VALIDATE_EMAIL);
 
         if (!$response) {
-            $this->_addErrorMessage("Invalid email address format");
+            $this->_addErrorMessage('Invalid email address format');
 
             return false;
         }
@@ -138,31 +143,31 @@ class SignupForm extends Form
      *
      * @return true|string
      */
-    public function validatePasswords()
+    public function validatePasswords(): bool
     {
         $passwd = $this->_cleanData['password'];
         $passwd2 = $this->_cleanData['password2'];
 
         if ($passwd == '' || $passwd2 == '') {
-            $this->_addErrorMessage("Missing passwords");
+            $this->_addErrorMessage('Missing passwords');
 
             return false;
         }
 
         if ($passwd !== $passwd2) {
-            $this->_addErrorMessage("The submitted passwords do not match");
+            $this->_addErrorMessage('The submitted passwords do not match');
 
             return false;
         }
 
         if (strlen($passwd) < 5 && strlen($passwd2) < 5) {
-            $this->_addErrorMessage("The submitted password must be at least 5 characters long");
+            $this->_addErrorMessage('The submitted password must be at least 5 characters long');
 
             return false;
         }
 
-        if ($passwd !== str_replace(" ", "", $passwd)) {
-            $this->_addErrorMessage("The submitted password contains invalid characters");
+        if ($passwd !== str_replace(' ', '', $passwd)) {
+            $this->_addErrorMessage('The submitted password contains invalid characters');
 
             return false;
         }
@@ -173,18 +178,14 @@ class SignupForm extends Form
     /**
      * Method that applies vaidation rules to user-submitted first names
      *
-     * @return boolean
+     * @return bool
      */
-    public function validateFirstName()
+    public function validateFirstName(): bool
     {
-        $first_name = filter_var(
-            $this->_cleanData['first_name'],
-            FILTER_SANITIZE_STRING,
-            ['flags' => FILTER_FLAG_STRIP_HIGH | FILTER_FLAG_STRIP_LOW]
-        );
+        $first_name = $this->_cleanData['first_name'];
         $validation_response = true;
 
-        if ($first_name == '') {
+        if (empty($first_name)) {
             $this->_addErrorMessage('First name cannot be blank');
             $validation_response = false;
         }
@@ -205,51 +206,62 @@ class SignupForm extends Form
     /**
      * Method that applies vaidation rules to user-submitted first names
      *
-     * @return boolean
+     * @return bool
      */
-    public function validateLastName()
+    public function validateLastName(): bool
     {
         $last_name = $this->_cleanData['last_name'];
+        $validation_response = true;
 
         if (empty($last_name)) {
-            $this->_addErrorMessage("Last name was blank or contained unwanted characters");
-
-            return false;
+            $this->_addErrorMessage('Last name cannot be blank');
+            $validation_response = false;
         }
 
         if (strlen($last_name) > 255) {
-            $this->_addErrorMessage("Last name cannot be longer than 255 characters");
-
-            return false;
+            $this->_addErrorMessage('Last name cannot exceed 255 characters');
+            $validation_response = false;
         }
 
         if ($last_name !== $this->_taintedData['last_name']) {
-            $this->_addErrorMessage("Last name data did not match after sanitizing");
-
-            return false;
+            $this->_addErrorMessage('Last name contains unwanted characters');
+            $validation_response = false;
         }
 
-        return true;
+        return $validation_response;
     }
 
-    public function validateCompany()
+    public function validateCompany(): bool
     {
         // $company = $this->_cleanData['company'];
         return true;
     }
 
-    public function validateTwitter()
+    public function validateTwitter(): bool
     {
         // $twitter = $this->_cleanData['twitter'];
         return true;
     }
 
+    public function validateUrl(): bool
+    {
+        if (preg_match('/https:\/\/joind\.in\/user\/[a-zA-Z0-9]{1,25}/', $this->_cleanData['url'])
+            || !isset($this->_cleanData['url'])
+            || $this->_cleanData['url'] == ''
+        ) {
+            return true;
+        } else {
+            $this->_addErrorMessage('You did not enter a valid joind.in URL');
+            return false;
+        }
+    }
+
     /**
      * Method that applies validation rules to user-submitted speaker info
      *
-     * @return boolean
+     * @return bool
      */
-    public function validateSpeakerInfo()
+    public function validateSpeakerInfo(): bool
     {
         $speakerInfo = filter_var(
             $this->_cleanData['speaker_info'],
@@ -260,7 +272,7 @@ class SignupForm extends Form
         $speakerInfo = $this->_purifier->purify($speakerInfo);
 
         if (empty($speakerInfo)) {
-            $this->_addErrorMessage("You submitted speaker info but it was empty after sanitizing");
+            $this->_addErrorMessage('You submitted speaker info but it was empty after sanitizing');
             $validation_response = false;
         }
 
@@ -270,9 +282,9 @@ class SignupForm extends Form
     /**
      * Method that applies validation rules to user-submitted speaker bio
      *
-     * @return boolean
+     * @return bool
      */
-    public function validateSpeakerBio()
+    public function validateSpeakerBio(): bool
     {
         $speaker_bio = filter_var(
             $this->_cleanData['speaker_bio'],
@@ -283,7 +295,7 @@ class SignupForm extends Form
         $speaker_bio = $this->_purifier->purify($speaker_bio);
 
         if (empty($speaker_bio)) {
-            $this->_addErrorMessage("You submitted speaker bio information but it was empty after sanitizing");
+            $this->_addErrorMessage('You submitted speaker bio information but it was empty after sanitizing');
             $validation_response = false;
         }
 
@@ -292,8 +304,6 @@ class SignupForm extends Form
 
     /**
      * Santize all our fields that were submitted
-     *
-     * @return array
      */
     public function sanitize()
     {
@@ -318,7 +328,7 @@ class SignupForm extends Form
         }
     }
 
-    private function validateAgreeCoc()
+    private function validateAgreeCoc(): bool
     {
         if (!$this->getOption('has_coc')) {
             return true;

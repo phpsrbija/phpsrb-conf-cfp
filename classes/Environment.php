@@ -1,11 +1,12 @@
-<?php namespace OpenCFP;
+<?php
 
-use InvalidArgumentException;
+namespace OpenCFP;
 
 class Environment
 {
     /**
      * The specified environment.
+     *
      * @var string
      */
     protected $slug;
@@ -13,7 +14,7 @@ class Environment
     private function __construct($slug)
     {
         if (! in_array($slug, ['production', 'development', 'testing'])) {
-            throw new InvalidArgumentException('Invalid environment specified.');
+            throw new \InvalidArgumentException('Invalid environment specified.');
         }
 
         $this->slug = (string) $slug;
@@ -48,7 +49,7 @@ class Environment
      */
     public static function fromEnvironmentVariable()
     {
-        $environment = isset($_SERVER['CFP_ENV']) ? $_SERVER['CFP_ENV'] : 'development';
+        $environment = $_SERVER['CFP_ENV'] ?? 'development';
 
         return new self($environment);
     }
@@ -64,7 +65,8 @@ class Environment
     }
 
     /**
-     * @param  Environment $environment
+     * @param Environment $environment
+     *
      * @return bool
      */
     public function equals(Environment $environment)

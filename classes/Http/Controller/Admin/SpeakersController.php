@@ -3,36 +3,29 @@
 namespace OpenCFP\Http\Controller\Admin;
 
 use OpenCFP\Domain\Entity\User;
+use OpenCFP\Domain\Services\AccountManagement;
 use OpenCFP\Domain\Services\AirportInformationDatabase;
+use OpenCFP\Domain\Services\Authentication;
+use OpenCFP\Domain\Services\Pagination;
+use OpenCFP\Domain\Speaker\SpeakerProfile;
 use OpenCFP\Http\Controller\BaseController;
 use OpenCFP\Http\Controller\FlashableTrait;
-use Pagerfanta\Adapter\ArrayAdapter;
-use Pagerfanta\Pagerfanta;
-use Pagerfanta\View\TwitterBootstrap3View;
-use Silex\Application;
 use Spot\Locator;
 use Spot\Mapper;
 use Symfony\Component\HttpFoundation\Request;
 
 class SpeakersController extends BaseController
 {
-    use AdminAccessTrait;
     use FlashableTrait;
 
     public function indexAction(Request $req)
     {
-        if (!$this->userHasAccess()) {
-            return $this->redirectTo('dashboard');
-        }
-
         /* @var Locator $spot */
         $spot = $this->service('spot');
 
-        $rawSpeakers = $spot
-            ->mapper(\OpenCFP\Domain\Entity\User::class)
-            ->all()
-            ->order(['first_name' => 'ASC'])
-            ->toArray();
+        $search = $req->get('search');
+        $user_mapper = $spot->mapper(\OpenCFP\Domain\Entity\User::class);
+        $rawSpeakers = $user_mapper->search($search)->toArray();
 
         $airports = $this->service(AirportInformationDatabase::class);
 
@@ -56,34 +49,28 @@ class SpeakersController extends BaseController
             return $speaker;
         }, $rawSpeakers);
 
-        // Set up our page stuff
-        $adapter = new ArrayAdapter($rawSpeakers);
-        $pagerfanta = new Pagerfanta($adapter);
-        $pagerfanta->setMaxPerPage(20);
-        $pagerfanta->getNbResults();
+        /** @var AccountManagement $accounts */
+        $accounts = $this->service(AccountManagement::class);
+        $adminUsers = $accounts->findByRole('Admin');
+        $adminUserIds = array_column($adminUsers, 'id');
 
-        if ($req->get('page') !== null) {
-            $pagerfanta->setCurrentPage($req->get('page'));
+        foreach ($rawSpeakers as $key => $each) {
+            $rawSpeakers[$key]['is_admin'] = in_array($each['id'], $adminUserIds);
         }
 
-        // Create our default view for the navigation options
-        $routeGenerator = function ($page) {
-            return '/admin/speakers?page=' . $page;
-        };
-        $view = new TwitterBootstrap3View();
-        $pagination = $view->render(
-            $pagerfanta,
-            $routeGenerator,
-            ['proximity' => 3]
-        );
+        // Set up our page stuff
+        $pagerfanta = new Pagination($rawSpeakers);
+        $pagerfanta->setCurrentPage($req->get('page'));
+        $pagination = $pagerfanta->createView('/admin/speakers?');
 
         $templateData = [
             'airport' => $this->app->config('application.airport'),
             'arrival' => date('Y-m-d', $this->app->config('application.arrival')),
             'departure' => date('Y-m-d', $this->app->config('application.departure')),
             'pagination' => $pagination,
-            'speakers' => $pagerfanta,
+            'speakers' => $pagerfanta->getFanta(),
             'page' => $pagerfanta->getCurrentPage(),
+            'search' => $search ?: '',
         ];
 
         return $this->render('admin/speaker/index.twig', $templateData);
@@ -91,10 +78,6 @@ class SpeakersController extends BaseController
 
     public function viewAction(Request $req)
     {
-        if (!$this->userHasAccess()) {
-            return $this->redirectTo('dashboard');
-        }
-
         /* @var Locator $spot */
         $spot = $this->service('spot');
 
@@ -106,7 +89,7 @@ class SpeakersController extends BaseController
             $this->service('session')->set('flash', [
                 'type' => 'error',
                 'short' => 'Error',
-                'ext' => "Could not find requested speaker",
+                'ext' => 'Could not find requested speaker',
             ]);
 
             return $this->app->redirect($this->url('admin_speakers'));
@@ -139,7 +122,7 @@ class SpeakersController extends BaseController
             'airport' => $this->app->config('application.airport'),
             'arrival' => date('Y-m-d', $this->app->config('application.arrival')),
             'departure' => date('Y-m-d', $this->app->config('application.departure')),
-            'speaker' => $speaker_details,
+            'speaker' => new SpeakerProfile($speaker_details),
             'talks' => $talks,
             'photo_path' => '/uploads/',
             'page' => $req->get('page'),
@@ -150,10 +133,6 @@ class SpeakersController extends BaseController
 
     public function deleteAction(Request $req)
     {
-        if (!$this->userHasAccess()) {
-            return $this->redirectTo('dashboard');
-        }
-
         /* @var Locator $spot */
         $spot = $this->service('spot');
 
@@ -174,13 +153,13 @@ class SpeakersController extends BaseController
         if ($response === false) {
             $connection->rollBack();
 
-            $ext = "Unable to delete the requested user";
+            $ext = 'Unable to delete the requested user';
             $type = 'error';
             $short = 'Error';
         } else {
             $connection->commit();
 
-            $ext = "Successfully deleted the requested user";
+            $ext = 'Successfully deleted the requested user';
             $type = 'success';
             $short = 'Success';
         }
@@ -225,5 +204,92 @@ class SpeakersController extends BaseController
 
             $talkMapper->delete($talk);
         }
+    }
+
+    public function demoteAction(Request $req)
+    {
+        /** @var Authentication $auth */
+        $auth = $this->service(Authentication::class);
+
+        /** @var AccountManagement $accounts */
+        $accounts = $this->service(AccountManagement::class);
+
+        $admin = $auth->user();
+
+        if ($admin->getId() == $req->get('id')) {
+            $this->service('session')->set('flash', [
+                'type' => 'error',
+                'short' => 'Error',
+                'ext' => 'Sorry, you cannot remove yourself as Admin.',
+            ]);
+
+            return $this->redirectTo('admin_speakers');
+        }
+
+        /* @var Locator $spot */
+        $spot = $this->service('spot');
+
+        $mapper = $spot->mapper(\OpenCFP\Domain\Entity\User::class);
+        $user_data = $mapper->get($req->get('id'))->toArray();
+        $user = $accounts->findByLogin($user_data['email']);
+
+        try {
+            $accounts->demoteFrom($user->getLogin());
+
+            $this->service('session')->set('flash', [
+                'type' => 'success',
+                'short' => 'Success',
+                'ext' => '',
+            ]);
+        } catch (\Exception $e) {
+            $this->service('session')->set('flash', [
+                'type' => 'error',
+                'short' => 'Error',
+                'ext' => 'We were unable to remove the Admin. Please try again.',
+            ]);
+        }
+
+        return $this->redirectTo('admin_speakers');
+    }
+
+    public function promoteAction(Request $req)
+    {
+        /* @var AccountManagement $accounts */
+        $accounts = $this->service(AccountManagement::class);
+
+        /* @var Locator $spot */
+        $spot = $this->service('spot');
+
+        $mapper = $spot->mapper(\OpenCFP\Domain\Entity\User::class);
+        $user_data = $mapper->get($req->get('id'))->toArray();
+        $user = $accounts->findByLogin($user_data['email']);
+
+        if ($user->hasAccess('admin')) {
+            $this->service('session')->set('flash', [
+                'type' => 'error',
+                'short' => 'Error',
+                'ext' => 'User already is in the Admin group.',
+            ]);
+
+            return $this->redirectTo('admin_speakers');
+        }
+
+        try {
+            $accounts->promoteTo($user->getLogin());
+
+            $this->service('session')->set('flash', [
+                'type' => 'success',
+                'short' => 'Success',
+                'ext' => '',
+            ]);
+        } catch (\Exception $e) {
+            $this->service('session')->set('flash', [
+                'type' => 'error',
+                'short' => 'Error',
+                'ext' => 'We were unable to promote the Admin. Please try again.',
+            ]);
+        }
+
+        return $this->redirectTo('admin_speakers');
     }
 }

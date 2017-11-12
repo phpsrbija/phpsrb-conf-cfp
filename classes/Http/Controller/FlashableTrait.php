@@ -9,7 +9,8 @@ trait FlashableTrait
     /**
      * Get Session Flash Message
      *
-     * @param  Application $app OpenCFP Application
+     * @param Application $app OpenCFP Application
+     *
      * @return array
      */
     public function getFlash(Application $app)

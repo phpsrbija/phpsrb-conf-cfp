@@ -2,9 +2,9 @@
 
 namespace OpenCFP\Http\Controller;
 
-use Cartalyst\Sentry\Sentry;
 use OpenCFP\Application\NotAuthorizedException;
 use OpenCFP\Application\Speakers;
+use OpenCFP\Domain\Services\Authentication;
 use OpenCFP\Http\Form\TalkForm;
 use Silex\Application;
 use Spot\Locator;
@@ -17,22 +17,8 @@ class TalkController extends BaseController
     use FlashableTrait;
 
     /**
-     * Check to see if the CfP for this app is still open
-     *
-     * @param  integer $current_time
-     * @return boolean
-     */
-    public function isCfpOpen($current_time)
-    {
-        if ($current_time < strtotime($this->app->config('application.enddate') . ' 11:59 PM')) {
-            return true;
-        }
-
-        return false;
-    }
-
-    /**
      * @param $request_data
+     *
      * @return TalkForm
      */
     private function getTalkForm($request_data)
@@ -102,23 +88,14 @@ class TalkController extends BaseController
     /**
      * Controller action for viewing a specific talk
      *
-     * @param  Request $req
+     * @param Request $req
+     *
      * @return mixed
      */
     public function viewAction(Request $req)
     {
         /* @var Speakers $speakers */
         $speakers = $this->service('application.speakers');
-
-        /* @var Sentry $sentry */
-        $sentry = $this->service('sentry');
-
-        /////////
-        if (!$sentry->check()) {
-            return $this->redirectTo('login');
-        }
-
-        /////////
 
         try {
             $id = filter_var($req->get('id'), FILTER_VALIDATE_INT);
@@ -133,25 +110,21 @@ class TalkController extends BaseController
     /**
      * Controller action for displaying the form to edit an existing talk
      *
-     * @param  Request $req
+     * @param Request $req
+     *
      * @return mixed
      */
     public function editAction(Request $req)
     {
-        /* @var Sentry $sentry */
-        $sentry = $this->service('sentry');
-
-        if (!$sentry->check()) {
-            return $this->redirectTo('login');
-        }
-
         $id = $req->get('id');
         $talk_id = filter_var($id, FILTER_VALIDATE_INT);
 
         // You can only edit talks while the CfP is open
         // This will redirect to "view" the talk in a read-only template
-        if (! $this->isCfpOpen(strtotime('now'))) {
-            $this->service('session')->set('flash', [
+        if (! $this->service('callforproposal')->isOpen()) {
+            $this->service('session')->set(
+                'flash',
+                [
                 'type' => 'error',
                 'short' => 'Read Only',
                 'ext' => 'You cannot edit talks once the call for papers has ended', ]
@@ -164,13 +137,13 @@ class TalkController extends BaseController
             return $this->redirectTo('dashboard');
         }
 
-        $user = $sentry->getUser();
+        $user = $this->service(Authentication::class)->user();
 
         /* @var Locator $spot */
         $spot = $this->service('spot');
 
         $talk_mapper = $spot->mapper(\OpenCFP\Domain\Entity\Talk::class);
-        $talk_info = $talk_mapper->get($talk_id)->toArray();
+        $talk_info = $talk_mapper->where(['id' => $talk_id])->execute()->first()->toArray();
 
         if ($talk_info['user_id'] !== (int) $user->getId()) {
             return $this->redirectTo('dashboard');
@@ -200,21 +173,17 @@ class TalkController extends BaseController
     /**
      * Action for displaying the form to create a new talk
      *
-     * @param  Request $req
+     * @param Request $req
+     *
      * @return mixed
      */
     public function createAction(Request $req)
     {
-        /* @var Sentry $sentry */
-        $sentry = $this->service('sentry');
-
-        if (!$sentry->check()) {
-            return $this->redirectTo('login');
-        }
-
         // You can only create talks while the CfP is open
-        if (! $this->isCfpOpen(strtotime('now'))) {
-            $this->service('session')->set('flash', [
+        if (! $this->service('callforproposal')->isOpen()) {
+            $this->service('session')->set(
+                'flash',
+                [
                 'type' => 'error',
                 'short' => 'Error',
                 'ext' => 'You cannot create talks once the call for papers has ended', ]
@@ -247,21 +216,17 @@ class TalkController extends BaseController
      * Controller action the processes the POST request to try and create
      * a new talk
      *
-     * @param  Request $req
+     * @param Request $req
+     *
      * @return mixed
      */
     public function processCreateAction(Request $req)
     {
-        /* @var Sentry $sentry */
-        $sentry = $this->service('sentry');
-
-        if (!$sentry->check()) {
-            return $this->redirectTo('login');
-        }
-
         // You can only create talks while the CfP is open
-        if (! $this->isCfpOpen(strtotime('now'))) {
-            $this->service('session')->set('flash', [
+        if (! $this->service('callforproposal')->isOpen()) {
+            $this->service('session')->set(
+                'flash',
+                [
                 'type' => 'error',
                 'short' => 'Error',
                 'ext' => 'You cannot create talks once the call for papers has ended', ]
@@ -270,7 +235,7 @@ class TalkController extends BaseController
             return $this->redirectTo('dashboard');
         }
 
-        $user = $sentry->getUser();
+        $user = $this->service(Authentication::class)->user();
 
         $request_data = [
             'title' => $req->get('title'),
@@ -291,6 +256,11 @@ class TalkController extends BaseController
 
         if ($isValid) {
             $sanitized_data = $form->getCleanData();
+
+            /* @var Locator $spot */
+            $spot = $this->service('spot');
+
+            $talk_mapper = $spot->mapper(\OpenCFP\Domain\Entity\Talk::class);
             $data = [
                 'title' => $sanitized_data['title'],
                 'description' => $sanitized_data['description'],
@@ -304,20 +274,23 @@ class TalkController extends BaseController
                 'user_id' => (int) $user->getId(),
             ];
 
-            /* @var Locator $spot */
-            $spot = $this->service('spot');
+            $talk = $talk_mapper->build($data);
 
-            $talk_mapper = $spot->mapper(\OpenCFP\Domain\Entity\Talk::class);
-            $talk = $talk_mapper->create($data);
+            try {
+                $talk_mapper->save($talk, ['relations' => true]);
+            } catch (\Exception $e) {
+                echo $e->getMessage();
+                die();
+            }
 
             $this->service('session')->set('flash', [
                 'type' => 'success',
                 'short' => 'Success',
-                'ext' => 'Successfully added talk.',
+                'ext' => 'Successfully saved talk.',
             ]);
 
             // send email to speaker showing submission
-            $this->sendSubmitEmail($this->app, $user->getLogin(), $talk->id);
+            $this->sendSubmitEmail($this->app, $user->getLogin(), $talk->get('id'));
 
             return $this->redirectTo('dashboard');
         }
@@ -342,24 +315,23 @@ class TalkController extends BaseController
         $this->service('session')->set('flash', [
             'type' => 'error',
             'short' => 'Error',
-            'ext' => implode("<br>", $form->getErrorMessages()),
+            'ext' => implode('<br>', $form->getErrorMessages()),
         ]);
 
+        $this->service('session')->set('flash', [
+            'type' => 'error',
+            'short' => 'Error',
+            'ext' => implode('<br>', $form->getErrorMessages()),
+        ]);
         $data['flash'] = $this->getFlash($this->app);
 
-        return $this->render('talk/edit.twig', $data);
+        return $this->render('talk/create.twig', $data);
     }
 
     public function updateAction(Request $req)
     {
-        /* @var Sentry $sentry */
-        $sentry = $this->service('sentry');
+        $user = $this->service(Authentication::class)->user();
 
-        if (!$sentry->check()) {
-            return $this->redirectTo('login');
-        }
-
-        $user = $sentry->getUser();
         $request_data = [
             'id' => $req->get('id'),
             'title' => $req->get('title'),
@@ -380,7 +352,10 @@ class TalkController extends BaseController
 
         if ($isValid) {
             $sanitized_data = $form->getCleanData();
-            $updated_at = new \DateTime();
+
+            /* @var Locator $spot */
+            $spot = $this->service('spot');
+            $talk_mapper = $spot->mapper(\OpenCFP\Domain\Entity\Talk::class);
             $data = [
                 'id' => (int) $sanitized_data['id'],
                 'title' => $sanitized_data['title'],
@@ -393,26 +368,30 @@ class TalkController extends BaseController
                 'other' => $sanitized_data['other'],
                 'sponsor' => $sanitized_data['sponsor'],
                 'user_id' => (int) $user->getId(),
-                'updated_at' => $updated_at,
+                'updated_at' => new \DateTime(),
             ];
 
-            /* @var Locator $spot */
-            $spot = $this->service('spot');
-
-            $mapper = $spot->mapper(\OpenCFP\Domain\Entity\Talk::class);
-            $talk = $mapper->get($data['id']);
+            $talk = $talk_mapper->get($data['id']);
 
             foreach ($data as $field => $value) {
                 $talk->$field = $value;
             }
 
-            $mapper->save($talk);
+            try {
+                $talk_mapper->save($talk, ['relations' => true]);
+            } catch (\Exception $e) {
+                echo $e->getMessage();
+                die();
+            }
 
             $this->service('session')->set('flash', [
                 'type' => 'success',
                 'short' => 'Success',
-                'ext' => 'Successfully updated talk.',
+                'ext' => 'Successfully saved talk.',
             ]);
+
+            // send email to speaker showing submission
+            $this->sendSubmitEmail($this->app, $user->getLogin(), $talk->get('id'));
 
             return $this->redirectTo('dashboard');
         }
@@ -438,7 +417,7 @@ class TalkController extends BaseController
         $this->service('session')->set('flash', [
             'type' => 'error',
             'short' => 'Error',
-            'ext' => implode("<br>", $form->getErrorMessages()),
+            'ext' => implode('<br>', $form->getErrorMessages()),
         ]);
 
         $data['flash'] = $this->getFlash($this->app);
@@ -448,19 +427,12 @@ class TalkController extends BaseController
 
     public function deleteAction(Request $req, Application $app)
     {
-        /* @var Sentry $sentry */
-        $sentry = $app['sentry'];
-
-        if (!$sentry->check()) {
-            return $app->json(['delete' => 'no-user']);
-        }
-
         // You can only delete talks while the CfP is open
-        if (! $this->isCfpOpen(strtotime('now'))) {
+        if (! $this->service('callforproposal')->isOpen()) {
             return $app->json(['delete' => 'no']);
         }
 
-        $user = $sentry->getUser();
+        $user = $this->service(Authentication::class)->user();
         $talk_mapper = $app['spot']->mapper(\OpenCFP\Domain\Entity\Talk::class);
         $talk = $talk_mapper->get($req->get('tid'));
 
@@ -476,9 +448,10 @@ class TalkController extends BaseController
     /**
      * Method that sends an email when a talk is created
      *
-     * @param  Application $app
-     * @param  string      $email
-     * @param  integer     $talk_id
+     * @param Application $app
+     * @param string      $email
+     * @param int         $talk_id
+     *
      * @return mixed
      */
     protected function sendSubmitEmail(Application $app, $email, $talk_id)

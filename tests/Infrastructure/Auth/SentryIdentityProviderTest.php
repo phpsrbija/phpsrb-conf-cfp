@@ -27,9 +27,7 @@ class SentryIdentityProviderTest extends \PHPUnit\Framework\TestCase
 
         $this->assertInstanceOf(IdentityProvider::class, $provider);
     }
-
-    /**
-     */
+    
     public function testGetCurrentUserThrowsNotAuthenticatedExceptionWhenNotAuthenticated()
     {
         $sentry = $this->getSentryMock();

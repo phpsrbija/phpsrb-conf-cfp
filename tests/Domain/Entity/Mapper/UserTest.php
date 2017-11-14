@@ -14,7 +14,7 @@ class UserTest extends \PHPUnit\Framework\TestCase
     private $app;
     /** @var  \OpenCFP\Domain\Entity\Mapper\User */
     private $mapper;
-    private $entities = ['User',];
+    private $entities = ['User'];
 
     protected function setUp()
     {
@@ -45,6 +45,7 @@ class UserTest extends \PHPUnit\Framework\TestCase
 
         $this->assertCount(5, $result);
     }
+
     /**
      * @test
      */

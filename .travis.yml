@@ -38,7 +38,9 @@ jobs:
       script:
         - vendor/bin/php-cs-fixer fix --diff --dry-run --verbose
 
-    - stage: Test
+    - &TEST
+
+      stage: Test
 
       php: 7.0
 
@@ -50,7 +52,6 @@ jobs:
             - sqlite3
 
       before_install:
-        - if [[ "$TRAVIS_PULL_REQUEST" == "false" && "$TRAVIS_BRANCH" == "master" ]]; then WITH_COVERAGE=true; else WITH_COVERAGE=false; fi
         - if [[ "$WITH_COVERAGE" == "false" ]]; then phpenv config-rm xdebug.ini; fi
         - composer validate --no-check-publish
 
@@ -66,14 +67,18 @@ jobs:
         - chmod +x ./cc-test-reporter
         - ./cc-test-reporter before-build
 
+      script:
+        - vendor/bin/phpunit --coverage-clover build/logs/clover.xml
+
       after_script:
         - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT
 
-      script:
-        - if [[ "$WITH_COVERAGE" == "true" ]]; then vendor/bin/phpunit --coverage-clover build/logs/clover.xml; else vendor/bin/phpunit; fi
-
       after_success:
-        - if [[ "$WITH_COVERAGE" == "true" ]]; then vendor/bin/test-reporter --coverage-report build/logs/clover.xml; fi
+        - vendor/bin/test-reporter --coverage-report build/logs/clover.xml
+
+    - <<: *TEST
+
+      php: 7.1
 
     - stage: Asset
 

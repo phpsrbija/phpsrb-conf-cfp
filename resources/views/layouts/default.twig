@@ -8,7 +8,7 @@
     <body class="border-t-4 border-brand">
         <nav class="{% if not active('homepage') %}border-b border-white{% endif %}">
             <div class="container mx-auto flex justify-between">
-                <a href="{{ url('homepage') }}" class="logo pull-left"><img src="/assets/img/phpsrb-logo.png" alt="PHPSerbia Conference CFP" width="130" height="60"></a>
+                <a href="{{ url('homepage') }}" class="logo pull-left"><img src="/assets/img/phpsrb-logo.png" alt="PHP Serbia Conference CFP"></a>
                 <div class="flex">
                     <a href="{{ url('homepage') }}" class="mr-8 py-6 {% if active('homepage') %}border-b-4 border-brand{% else %}text-soft{% endif %}">Home</a>
                     <a href="{{ url('speaker_package') }}" class="mr-8 py-6 {% if active('speaker_package') %}border-b-4 border-brand{% else %}text-soft{% endif %}">Speaker Package</a>

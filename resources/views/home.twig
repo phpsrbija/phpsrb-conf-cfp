@@ -29,7 +29,7 @@
     <div class="container mx-auto">
         <div class="flex justify-between items-center px-4 py-6">
             {% if site.event_location is defined and site.date_format is defined %}
-                <p>{{ site.title }} is from <span class="text-bold">{{ site.arrival|date(site.date_format, false) }}</span> to <span class="text-bold">{{ site.departure|date(site.date_format, false) }}</span> in {{ site.event_location }}</p>
+                <h2>{{ site.title }} is from {{ site.arrival|date(site.date_format, false) }} to {{ site.departure|date(site.date_format, false) }} in {{ site.event_location }}</h2>
             {%  else %}
                 <p>For More Information About The Conference</p>
             {% endif %}

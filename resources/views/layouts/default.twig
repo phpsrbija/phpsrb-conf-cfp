@@ -8,10 +8,7 @@
     <body class="border-t-4 border-brand">
         <nav class="{% if not active('homepage') %}border-b border-white{% endif %}">
             <div class="container mx-auto flex justify-between">
-                <a class="font-serif flex items-center" href="{{ url('homepage') }}">
-                    <img class="w-10 mr-2" src="/assets/img/logo.svg" alt="OpenCFP">
-                    <h1 class="font-normal m-0">Open<span class="text-brand font-bold">CFP</span></h1>
-                </a>
+                <a href="{{ url('homepage') }}" class="logo pull-left"><img src="/assets/img/phpsrb-logo.png" alt="PHPSerbia Conference CFP" width="130" height="60"></a>
                 <div class="flex">
                     <a href="{{ url('homepage') }}" class="mr-8 py-6 {% if active('homepage') %}border-b-4 border-brand{% else %}text-soft{% endif %}">Home</a>
                     <a href="{{ url('speaker_package') }}" class="mr-8 py-6 {% if active('speaker_package') %}border-b-4 border-brand{% else %}text-soft{% endif %}">Speaker Package</a>
@@ -46,7 +43,5 @@
                     integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
                     crossorigin="anonymous"></script>
         {% endblock %}
-
-        {% include "_forkme.twig" %}
     </body>
 </html>

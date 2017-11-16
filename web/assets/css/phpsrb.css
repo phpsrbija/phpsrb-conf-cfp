@@ -1,11 +1,30 @@
 body {
-    background-color: #fff;
-    color: #333;
+    background-color: #f6f6f8;
 }
 
-a {
-    color: #337ab7;
+.section-highlight {
+    background-color: #db3738;
+    color: #fff !important;
 }
-a:focus, a:hover {
-    color: #23527c;
+
+.section-highlight .btn {
+    border-color: #fecf05;
+    background-color: #fecf05;
+    color: #000;
 }
+.section-highlight .btn:hover {
+}
+
+nav {
+    background-color: #252525;
+    color: #fff;
+}
+
+nav a {
+    color: #fff;
+}
+nav a:hover {
+    color: #9babb4;
+}
+
+

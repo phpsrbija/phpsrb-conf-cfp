@@ -26,16 +26,19 @@
         </div>
     </header>
 
-    <div class="container mx-auto">
-        <div class="flex justify-between items-center px-4 py-6">
-            {% if site.event_location is defined and site.date_format is defined %}
-                <h2>{{ site.title }} is from {{ site.arrival|date(site.date_format, false) }} to {{ site.departure|date(site.date_format, false) }} in {{ site.event_location }}</h2>
-            {%  else %}
-                <p>For More Information About The Conference</p>
-            {% endif %}
-            <a href="{{ site.eventurl }}" class="btn btn-brand-o">Visit Conference Site</a>
+    <div class="section-highlight">
+        <div class="container mx-auto">
+            <div class="flex justify-between items-center px-4 py-6">
+                {% if site.event_location is defined and site.date_format is defined %}
+                    <h2>{{ site.title }} is from {{ site.arrival|date(site.date_format, false) }} to {{ site.departure|date(site.date_format, false) }} in {{ site.event_location }}</h2>
+                {%  else %}
+                    <p>For More Information About The Conference</p>
+                {% endif %}
+                <a href="{{ site.eventurl }}" class="btn btn-brand-o">Visit Conference Site</a>
+            </div>
         </div>
     </div>
+
 {% endblock %}
 {% block content %}
     {% include "_flash.twig" %}

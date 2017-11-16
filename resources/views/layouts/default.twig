@@ -4,27 +4,31 @@
         <title>{% block title %}{{ site.title }}{% endblock %}</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link href="/assets/css/app.css" rel="stylesheet" media="screen">
+        <link href="/assets/css/phpsrb.css" rel="stylesheet" media="screen">
     </head>
     <body class="border-t-4 border-brand">
         <nav class="{% if not active('homepage') %}border-b border-white{% endif %}">
             <div class="container mx-auto flex justify-between">
-                <a href="{{ url('homepage') }}" class="logo pull-left"><img src="/assets/img/phpsrb-logo.png" alt="PHP Serbia Conference CFP"></a>
+                <a class="font-serif flex items-center" href="{{ url('homepage') }}">
+                    <img src="/assets/img/phpsrb-logo.png" alt="">
+                    <h1 class="font-normal m-0">PHP <span class="text-brand font-bold">Srbija</span></h1>
+                </a>
                 <div class="flex">
-                    <a href="{{ url('homepage') }}" class="mr-8 py-6 {% if active('homepage') %}border-b-4 border-brand{% else %}text-soft{% endif %}">Home</a>
-                    <a href="{{ url('speaker_package') }}" class="mr-8 py-6 {% if active('speaker_package') %}border-b-4 border-brand{% else %}text-soft{% endif %}">Speaker Package</a>
-                    <a href="{{ url('talk_ideas') }}" class="mr-8 py-6 {% if active('talk_ideas') %}border-b-4 border-brand{% else %}text-soft{% endif %}">Talk Ideas</a>
+                    <a href="{{ url('homepage') }}" class="mr-8 py-6 {% if active('homepage') %}border-b-4 border-brand{% endif %}">Home</a>
+                    <a href="{{ url('speaker_package') }}" class="mr-8 py-6 {% if active('speaker_package') %}border-b-4 border-brand{% endif %}">Speaker Package</a>
+                    <a href="{{ url('talk_ideas') }}" class="mr-8 py-6 {% if active('talk_ideas') %}border-b-4 border-brand{% endif %}">Talk Ideas</a>
                     {% if user is defined and user is not empty %}
-                        <a href="{{ url('dashboard') }}" class="mr-8 py-6 {% if active('dashboard') %}border-b-4 border-brand{% else %}text-soft{% endif %}">Dashboard</a>
+                        <a href="{{ url('dashboard') }}" class="mr-8 py-6 {% if active('dashboard') %}border-b-4 border-brand{% endif %}">Dashboard</a>
                         {% if user_is_admin %}
-                            <a href="{{ url('admin') }}" class="mr-8 py-6 {% if active('admin') %}border-b-4 border-brand{% else %}text-soft{% endif %}">Admin</a>
+                            <a href="{{ url('admin') }}" class="mr-8 py-6 {% if active('admin') %}border-b-4 border-brand{% endif %}">Admin</a>
                         {% endif %}
                         {% if user_is_reviewer is defined and user_is_reviewer %}
-                            <a href="{{ url('reviewer') }}" class="mr-8 py-6 {% if active('reviewer') %}border-b-4 border-brand{% else %}text-soft{% endif %}">Reviewer</a>
+                            <a href="{{ url('reviewer') }}" class="mr-8 py-6 {% if active('reviewer') %}border-b-4 border-brand{% endif %}">Reviewer</a>
                         {% endif %}
                         <a href="{{ url('logout') }}" class="py-6 text-soft">Logout</a>
                     {% else %}
-                        <a href="{{ url('login') }}" class="mr-8 py-6 text-soft hover:text-dark">Login</a>
-                        <a href="{{ url('user_new') }}" class="py-6 text-soft @text-dark">Signup</a>
+                        <a href="{{ url('login') }}" class="mr-8 py-6">Login</a>
+                        <a href="{{ url('user_new') }}" class="py-6">Signup</a>
                     {% endif %}
                 </div>
             </div>

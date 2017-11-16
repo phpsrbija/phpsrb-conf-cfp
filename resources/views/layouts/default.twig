@@ -37,9 +37,11 @@
         {% block header %}
         {% endblock %}
 
-        <main class="container mx-auto mt-8 flex">
-            <div class="flex-1 mr-16">{% block sidebar %}{% endblock %}</div>
-            <div class="flex-3 w-full">{% block content %}{% endblock %}</div>
+        <main>
+            <div class="container mx-auto pt-4 flex">
+                <div class="flex-1 mr-16">{% block sidebar %}{% endblock %}</div>
+                <div class="flex-3 w-full">{% block content %}{% endblock %}</div>
+            </div>
         </main>
 
         {% block scripts %}
@@ -47,5 +49,11 @@
                     integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
                     crossorigin="anonymous"></script>
         {% endblock %}
+
+        <footer class="footer">
+            <div class="container mx-auto mt-8">
+                <p>Powered by <a href="https://github.com/opencfp/opencfp">OpenCFP</a></p>
+            </div>
+        </footer>
     </body>
 </html>

@@ -13,7 +13,17 @@ class SpeakersController extends BaseController
     public function indexAction(Request $req)
     {
         $search = $req->get('search');
-        $speakers = User::search($search)->get()->toArray();
+        
+        if (!empty($req->get('order_by'))) {
+            $order_by = $req->get('order_by');
+            $order = $req->get('order');
+
+            $speakers = User::search($search, $order_by, $order)->get()->toArray();
+        }
+        else {
+            $speakers = User::search($search)->get()->toArray();
+        }
+
         // Set up our page stuff
         $pagerfanta = new Pagination($speakers);
         $pagerfanta->setCurrentPage($req->get('page'));

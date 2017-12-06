@@ -15,10 +15,10 @@ class SpeakersController extends BaseController
         $search = $req->get('search');
         
         if (!empty($req->get('order_by'))) {
-            $order_by = $req->get('order_by');
+            $orderBy = $req->get('order_by');
             $order = $req->get('order');
 
-            $speakers = User::search($search, $order_by, $order)->get()->toArray();
+            $speakers = User::search($search, $orderBy, $order)->get()->toArray();
         }
         else {
             $speakers = User::search($search)->get()->toArray();

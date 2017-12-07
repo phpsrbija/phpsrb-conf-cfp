@@ -27,7 +27,17 @@ class SpeakersController extends BaseController
         // Set up our page stuff
         $pagerfanta = new Pagination($speakers);
         $pagerfanta->setCurrentPage($req->get('page'));
-        $pagination = $pagerfanta->createView('/reviewer/speakers?');
+        
+        // Paginator url
+        if (!empty($req->get('order_by'))) {
+            $pagination = $pagerfanta->createView('/reviewer/speakers?search='. $search .'&order_by='. $order_by. '&order='. $order .'&');
+        }
+        else if (!empty($req->get('search'))){
+            $pagination = $pagerfanta->createView('/reviewer/speakers?search='. $search .'&');
+        } 
+        else {
+            $pagination = $pagerfanta->createView('/reviewer/speakers?');
+        }
 
         $templateData = [
             'pagination' => $pagination,

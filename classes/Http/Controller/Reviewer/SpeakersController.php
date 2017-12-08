@@ -29,7 +29,7 @@ class SpeakersController extends BaseController
         
         // Paginator url
         if (!empty($req->get('order_by'))) {
-            $pagination = $pagerfanta->createView('/reviewer/speakers?search='. $search .'&order_by='. $order_by. '&order='. $order .'&');
+            $pagination = $pagerfanta->createView('/reviewer/speakers?search='. $search .'&order_by='. $orderBy. '&order='. $order .'&');
         } elseif (!empty($req->get('search'))){
             $pagination = $pagerfanta->createView('/reviewer/speakers?search='. $search .'&');
         } else {

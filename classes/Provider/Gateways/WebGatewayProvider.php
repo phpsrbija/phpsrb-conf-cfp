@@ -52,7 +52,7 @@ class WebGatewayProvider implements BootableProviderInterface, ServiceProviderIn
         }, Application::EARLY_EVENT);
 
         if ($app->config('application.secure_ssl')) {
-            $app->requireHttps();
+            $web->requireHttps();
         }
 
         $asSpeaker = function () use ($app) {

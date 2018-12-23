@@ -11,6 +11,7 @@ class TalkForm extends Form
     protected $_fieldList = [
         'title',
         'description',
+        'short_description',
         'type',
         'level',
         'category',

@@ -157,7 +157,10 @@ class TalkController extends BaseController
             'id' => $talk_id,
             'title' => html_entity_decode($talk_info['title']),
             'description' => html_entity_decode($talk_info['description']),
+            'short_description' => html_entity_decode($talk_info['short_description']),
             'type' => $talk_info['type'],
+            'stack' => $talk_info['stack'],
+            'duration' => $talk_info['duration'],
             'level' => $talk_info['level'],
             'category' => $talk_info['category'],
             'desired' => $talk_info['desired'],
@@ -199,7 +202,10 @@ class TalkController extends BaseController
             'talkLevels' => $this->getTalkLevels(),
             'title' => $req->get('title'),
             'description' => $req->get('description'),
+            'short_description' => $req->get('short_description'),
             'type' => $req->get('type'),
+            'stack' => $req->get('stack'),
+            'duration' => $req->get('duration'),
             'level' => $req->get('level'),
             'category' => $req->get('category'),
             'desired' => $req->get('desired'),
@@ -248,6 +254,9 @@ class TalkController extends BaseController
             'other' => $req->get('other'),
             'sponsor' => $req->get('sponsor'),
             'user_id' => $req->get('user_id'),
+            'short_description' => $req->get('short_description'),
+            'stack' => $req->get('stack'),
+            'duration' => $req->get('duration'),
         ];
 
         $form = $this->getTalkForm($request_data);
@@ -272,6 +281,9 @@ class TalkController extends BaseController
                 'other' => $sanitized_data['other'],
                 'sponsor' => $sanitized_data['sponsor'],
                 'user_id' => (int) $user->getId(),
+                'short_description' => $sanitized_data['short_description'],
+                'stack' => $sanitized_data['stack'],
+                'duration' => $sanitized_data['duration'],
             ];
 
             $talk = $talk_mapper->build($data);
@@ -310,6 +322,9 @@ class TalkController extends BaseController
             'other' => $req->get('other'),
             'sponsor' => $req->get('sponsor'),
             'buttonInfo' => 'Submit my talk!',
+            'short_description' => $req->get('short_description'),
+            'stack' => $req->get('stack'),
+            'duration' => $req->get('duration'),
         ];
 
         $this->service('session')->set('flash', [
@@ -344,6 +359,9 @@ class TalkController extends BaseController
             'other' => $req->get('other'),
             'sponsor' => $req->get('sponsor'),
             'user_id' => $req->get('user_id'),
+            'short_description' => $req->get('short_description'),
+            'stack' => $req->get('stack'),
+            'duration' => $req->get('duration'),
         ];
 
         $form = $this->getTalkForm($request_data);
@@ -369,6 +387,9 @@ class TalkController extends BaseController
                 'sponsor' => $sanitized_data['sponsor'],
                 'user_id' => (int) $user->getId(),
                 'updated_at' => new \DateTime(),
+                'short_description' => $sanitized_data['short_description'],
+                'stack' => $sanitized_data['stack'],
+                'duration' => $sanitized_data['duration'],
             ];
 
             $talk = $talk_mapper->get($data['id']);
@@ -412,6 +433,9 @@ class TalkController extends BaseController
             'other' => $req->get('other'),
             'sponsor' => $req->get('sponsor'),
             'buttonInfo' => 'Update my talk!',
+            'short_description' => $req->get('short_description'),
+            'stack' => $req->get('stack'),
+            'duration' => $req->get('duration'),
         ];
 
         $this->service('session')->set('flash', [

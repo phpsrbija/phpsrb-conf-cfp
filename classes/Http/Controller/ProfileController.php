@@ -31,6 +31,10 @@ class ProfileController extends BaseController
             'last_name' => $speaker_data['last_name'],
             'company' => $speaker_data['company'],
             'twitter' => $speaker_data['twitter'],
+            'linkedIn' => $speaker_data['linkedIn'],
+            'country' => $speaker_data['country'],
+            'companyUrl' => $speaker_data['companyUrl'],
+            'jobTitle' => $speaker_data['jobTitle'],
             'url' => $speaker_data['url'],
             'speaker_info' => $speaker_data['info'],
             'speaker_bio' => $speaker_data['bio'],
@@ -71,6 +75,7 @@ class ProfileController extends BaseController
         $isValid = $form->validateAll('update');
 
         if ($isValid) {
+
             $sanitized_data = $this->transformSanitizedData($form->getCleanData());
             if (isset($form_data['speaker_photo'])) {
                 $sanitized_data['photo_path'] = $this->service('profile_image_processor')
@@ -164,6 +169,10 @@ class ProfileController extends BaseController
             'last_name' => $req->get('last_name'),
             'company' => $req->get('company'),
             'twitter' => $req->get('twitter'),
+            'linkedIn' => $req->get('linkedIn'),
+            'jobTitle' => $req->get('jobTitle'),
+            'country' => $req->get('country'),
+            'companyUrl' => $req->get('companyUrl'),
             'url' => $req->get('url'),
             'airport' => $req->get('airport'),
             'transportation' => (int) $req->get('transportation'),
@@ -171,6 +180,7 @@ class ProfileController extends BaseController
             'speaker_info' => $req->get('speaker_info') ?: null,
             'speaker_bio' => $req->get('speaker_bio') ?: null,
         ];
+
         return $form_data;
     }
 

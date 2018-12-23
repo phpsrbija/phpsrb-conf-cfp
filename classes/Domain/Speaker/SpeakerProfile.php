@@ -58,9 +58,29 @@ class SpeakerProfile
         return $this->speaker->company ?: null;
     }
 
+    public function getCompanyUrl()
+    {
+        return $this->speaker->companyUrl ?: null;
+    }
+
     public function getTwitter()
     {
         return $this->speaker->twitter;
+    }
+
+    public function getLinkedIn()
+    {
+        return $this->speaker->linkedIn;
+    }
+
+    public function getJobTitle()
+    {
+        return $this->speaker->jobTitle;
+    }
+
+    public function getCountry()
+    {
+        return $this->speaker->country;
     }
 
     public function getUrl()

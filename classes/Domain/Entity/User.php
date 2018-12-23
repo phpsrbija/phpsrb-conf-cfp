@@ -36,6 +36,10 @@ class User extends Entity
             'bio' => ['type' => 'text'],
             'photo_path' => ['type' => 'string', 'length' => 255],
             'has_made_profile' => ['type' => 'smallint', 'value' => 0],
+            'linkedIn' => ['type' => 'string', 'length' => 255],
+            'country' => ['type' => 'string', 'length' => 255],
+            'jobTitle' => ['type' => 'string', 'length' => 255],
+            'companyUrl' => ['type' => 'string', 'length' => 255],
         ];
     }
 

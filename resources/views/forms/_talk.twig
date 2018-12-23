@@ -1,4 +1,5 @@
 {% include "_flash.twig" %}
+
 <form action="{{ formAction }}" method="POST" class="form-horizontal">
     {% if id is defined %}
         <input name="id" type="hidden" value="{{ id }}">
@@ -9,9 +10,13 @@
             <label for="form-talk-title" class="">Talk Title</label>
             <input id="form-talk-title" type="text" name="title" class="" placeholder="Talk Title" value="{{ title }}" maxlength="100">
 
-            <label for="form-talk-description" class="">Description/Abstract</label>
+            <label for="form-talk-description" class="">Full Description/Abstract</label>
             <textarea id="form-talk-description" name="description" class="" placeholder="Give a description of your talk (Abstract)" rows="10">{{ description }}</textarea>
             <p class="text-xs text-em mb-2 text-dark-soft">Speaker abstract can be written using <a href="http://daringfireball.net/projects/markdown/basics" target="_blank">markdown</a> to support links</p>
+
+            <label for="form-talk-short_description" class="">Short Description</label>
+            <input id="form-talk-short_description" name="short_description" class="" placeholder="Give a short description of your talk" value="{{ short_description }}" />
+            <p class="text-xs text-em mb-2 text-dark-soft">&nbsp;</p>
 
             <label for="form-talk-other" class="">Additional Talk Information</label>
             <textarea id="form-talk-other" name="other" class="" placeholder="Other Considerations, such as Joind.In, Lanyrd, local user group, etc." rows="10">{{ other }}</textarea>
@@ -29,11 +34,13 @@
             </select>
 
             <label for="form-talk-category" class="">Talk Category</label>
-            <select id="form-talk-category" name="category" class="">
+            <select id="form-talk-stack" name="stack" class="" multiple>
                 {% for categoryKey, displayCategory in talkCategories %}
-                    <option value="{{ categoryKey }}" {% if category == categoryKey %}selected {% endif %}>{{ displayCategory }}</option>
+                    <option value="{{ categoryKey }}" {% if stack == categoryKey %}selected {% endif %}>{{ displayCategory }}</option>
                 {% endfor %}
             </select>
+            <input id="form-talk-stackOther" type="text" name="stackOther" class="" placeholder="Other, separate by commas" value="">
+            {#<input id="form-talk-stackOther" type="text" name="stackOther" class="" placeholder="Other, separate by commas" value="{{ stackOther }}">#}
 
             <label for="form-talk-level" class="">Talk Level</label>
             <select id="form-talk-level" name="level" class="">
@@ -41,6 +48,17 @@
                     <option value="{{ levelKey }}" {% if level == levelKey %}selected {% endif %}>{{ displayLevel }}</option>
                 {% endfor %}
             </select>
+
+            {#<label for="form-talk-stack" class="">Talk Technology Stack</label>#}
+
+
+            <label for="form-talk-duration" class="">Talk Duration, without Q/A</label>
+            <select id="form-talk-duration" name="duration" class="">
+            {% for durations in [30,35,40,45,50] %}
+                <option value="{{ durations }}" {% if durations == duration %}selected {% endif %}>{{ durations }}m</option>
+            {% endfor %}
+            </select>
+            {#<input id="form-talk-duration" type="text" name="duration" class="" placeholder="Duration (minutes)" value="{{ duration }}">#}
 
             <div class="my-1">
                 <input id="form-sponsor" name="sponsor" type="checkbox" value="1" {% if sponsor == '1' %}checked{% endif %}> <label for="form-sponsor" class="text-dark text-base">Is your company sponsoring, or would they like to?</label><br>

@@ -4,14 +4,25 @@
         <title>{% block title %}{{ site.title }}{% endblock %}</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link href="/assets/css/app.css" rel="stylesheet" media="screen">
-        <link href="/assets/css/phpsrb.css" rel="stylesheet" media="screen">
+        <link href="/assets/css/phpsrb.css?6" rel="stylesheet" media="screen">
+        <link rel="shortcut icon" type="image/png" href="/assets/img/index.png"/>
+        <meta name="og:title" content="PHP Serbia Conference 2019">
+        <meta name="og:type" content="page">
+        <meta name="og:image" content="https://phpsrbija.rs/uploads/f/f/5/ff59f46f3ff13ef8a18092fc01861072.jpg">
+        <meta name="og:url" content="https://conf2019.phpsrbija.rs/">
+        <meta name="og:description" content="Join us for PHP Serbia Conference 2019. Details Coming Soon. Sign Up to our newsletter for more info.">
+        <meta property="og:description" content="Join us for PHP Serbia Conference 2019. Details Coming Soon. Sign Up to our newsletter for more info.">
+        <meta property="og:type" content="page">
+        <meta property="og:image" content="https://phpsrbija.rs/uploads/f/f/5/ff59f46f3ff13ef8a18092fc01861072.jpg">
+        <meta property="og:url" content="https://conf2019.phpsrbija.rs/">
+        <meta property="og:title" content="PHP Serbia Conference 2019">
     </head>
     <body class="border-t-4 border-brand">
         <nav class="{% if not active('homepage') %}border-b border-white{% endif %}">
-            <div class="container mx-auto flex justify-between">
+            <div class="container mx-auto logoWrapper flex justify-between">
                 <a class="font-serif flex items-center" href="{{ url('homepage') }}">
-                    <img src="/assets/img/phpsrb-logo.png" alt="">
-                    <h1 class="font-normal m-2">PHP <span class="text-brand font-bold">Srbija</span></h1>
+                    <img src="/assets/img/phpsrb-logo2.png" alt="" height="60">
+                    {#<h1 class="font-normal m-2">PHP <span class="text-brand font-bold">Srbija</span></h1>#}
                 </a>
                 <div class="flex">
                     <a href="{{ url('homepage') }}" class="mr-8 py-6 {% if active('homepage') %}border-b-4 border-brand{% endif %}">Home</a>

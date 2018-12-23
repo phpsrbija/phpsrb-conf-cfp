@@ -7,7 +7,7 @@ main {
 }
 
 .section-highlight {
-    background-color: #db3738;
+    background-color: #4c2256;
     color: #fff !important;
 }
 
@@ -38,4 +38,21 @@ nav a:hover {
 .footer a:hover {
     text-decoration: underline;
 }
-
+.bg-brand, .hover\:bg-brand:hover {
+    background-color: #4c2256;
+}
+.border-brand, .hover\:border-brand:hover {
+    border-color: #4c2256;
+}
+.hover\:text-brand:hover, .text-brand {
+    color: #4c2256;
+}
+.btn-brand {
+    background-color: #4c2256;
+    color: #fff;
+    border: 2px solid #4c2256;
+}
+.logoWrapper {
+    padding-top:5px;
+    padding-bottom:5px;
+}

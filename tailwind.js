@@ -24,7 +24,7 @@ View the full documentation at https://tailwindcss.com.
 |
 */
 
-var defaultConfig = require('tailwindcss').defaultConfig()
+var defaultConfig = require('tailwindcss/defaultConfig')();
 
 
 /*
@@ -643,6 +643,7 @@ module.exports = {
   */
 
   margin: {
+    'auto': 'auto',
     'px': '1px',
     '0': '0',
     '1': '0.25rem',

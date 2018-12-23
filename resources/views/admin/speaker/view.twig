@@ -2,17 +2,28 @@
 {% block content %}
 
     <div class="flex mb-8">
-        <img class="w-16 h-16 mr-4 rounded-full" src="{{ speaker.photo ? '/uploads/' ~ speaker.photo : '/assets/img/dummyphoto.jpg' }}">
+        <img class="w-16 h-16 mr-4 rounded-full" src="{{ speaker.photo ? uploads(speaker.photo) : assets('img/dummyphoto.jpg') }}">
         <div>
             <h1 class="-mt-2">
                 {{ speaker.name }}
-                {% if speaker.airport.code %}
+                {% if speaker.airport.code is defined %}
                     <a href="https://www.google.com/flights/#search;f={{ speaker.airport.code|upper }};t={{ airport|upper }};d={{ arrival }};r={{ departure }}" class="ml-3 text-brand text-sm hover:underline" target="_blank"><i class="fa fa-plane mr-2"></i>Flight Cost</a>
+                {% elseif speaker.airport%}
+                    <span class="ml-3 text-brand text-sm"><i class="fa fa-plane mr-2"></i>{{ speaker.airport }}</span>
                 {% endif %}
             </h1>
             <div>
                 {% if speaker.company %}<span class="mr-3"><i class="fa fa-building"></i> {{ speaker.company }}</span>{% endif %}
-                {% if speaker.twitter %}<span class="mr-3"><a class="hover:text-brand" target="_blank" href="https://twitter.com/{{ speaker.twitter }}"><i class="fa fa-twitter"></i> @{{ speaker.twitter }}</a></span>{% endif %}
+                {% if speaker.twitter %}<span class="mr-3"><a class="hover:text-brand" target="_blank" href="{{ speaker.twitterUrl }}" rel="noopener noreferrer"><i class="fa fa-twitter"></i> @{{ speaker.twitter }}</a></span>{% endif %}
+                {% if speaker.joindInUsername %}
+                    <span class="mr-3">
+                        <a class="hover:text-brand" target="_blank"
+                           href="{{ speaker.joindInUrl }}"
+                           rel="noopener noreferrer">
+                            <i class="fa fa-commenting-o"></i> {{ speaker.joindInUsername }}
+                        </a>
+                    </span>
+                {% endif %}
                 {% if speaker.email %}<span class="mr-3"><i class="fa fa-envelope"></i> {{ speaker.email }}</span>{% endif %}
             </div>
         </div>
@@ -28,7 +39,7 @@
                 <h3><i class="fa fa-bullhorn"></i> Talk Submissions</h3>
 
                 {% for talk in talks %}
-                    <a class="text-brand block mb-3" href="{{ url('admin_talk_view', { id: talk.id }) }}">{{ talk.title }}</a>
+                    <a class="text-brand block mb-3" href="{{ url('admin_talk_view', { id: talk.id }) }}">{{ talk.title | raw }}</a>
                 {% endfor %}
             {% endif %}
 
@@ -40,7 +51,7 @@
 
             {% if speaker.info is not empty %}
                 <h3>Additional Notes</h3>
-                <p>{{ speaker.info }}</p>
+                <p>{{ speaker.info | striptags | markdown }}</p>
             {% endif %}
         </div>
     </div>

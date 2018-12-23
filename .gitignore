@@ -10,6 +10,7 @@
 .DS_Store
 opencfp.iml
 .buildpath
+.php_cs
 .php_cs.cache
 .project
 .settings
@@ -17,8 +18,14 @@ composer.phar
 deployment.properties
 deployment.xml
 /scripts
+/tests/dump.sql
 /web/uploads/*
 !/web/uploads/dummyphoto.jpg
+/web/.htaccess
 phinx.yml
 /phpunit.xml
+infection-log.txt
+infection.json
+docker-compose.yml
+Homestead.yaml
 deployer.phar

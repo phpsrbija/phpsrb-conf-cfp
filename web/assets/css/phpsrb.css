@@ -7,7 +7,7 @@ main {
 }
 
 .section-highlight {
-    background-color: #db3738;
+    background-color: #4c2256;
     color: #fff !important;
 }
 
@@ -38,4 +38,145 @@ nav a:hover {
 .footer a:hover {
     text-decoration: underline;
 }
+.bg-brand, .hover\:bg-brand:hover {
+    background-color: #4c2256;
+}
+.border-brand, .hover\:border-brand:hover {
+    border-color: #4c2256;
+}
+.hover\:text-brand:hover, .text-brand {
+    color: #4c2256;
+}
+.btn-brand {
+    background-color: #4c2256;
+    color: #fff;
+    border: 2px solid #4c2256;
+}
+.logoWrapper {
+    padding-top:5px;
+    padding-bottom:5px;
+}
+.btn-white-o:hover{
+    color: #FECF05;
+}
+.text-yellow{
+    color: #FECF05;
+}
+.container{
+    padding-left: 10px;
+    padding-right: 10px;
+}
+.text-brand{
+    color: #FECF05;
+    text-decoration: underline;
+}
+.footer{
+    text-align: center;
+}
 
+
+/*****RESPONSIVE*****/
+
+.my-nav{
+    position: relative;
+}
+.mobile-bars{
+    align-self: center;
+    font-size: 30px;
+    display: none;
+}
+.my-talk-form select {
+    width: 100%;
+}
+@media only screen and (max-width: 992px){
+    .dashboard-user-info{
+        display: block;
+    }
+}
+@media only screen and (max-width: 768px) {
+    .nav-link-active{
+        background-color: #444;
+    }
+    .my-nav{
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+    .mobile-bars{
+        display: inherit;
+    }
+    .nav-links-responsive{
+        display: none;
+        position: absolute;
+        left: 0;
+        top: 70px;
+        background-color: #252525;
+        z-index: 1;
+        width: 100%;
+        padding: 12px;
+    }
+    .nav-links-responsive a{
+        display: block;
+        border: none;
+        padding-left: 10px;
+    }
+    .mobile-display-block{
+        display: block;
+    }
+    .section-highlight h2{
+        margin-bottom: 1.5rem;
+    }
+    .mobile-full-width{
+        width: 100%;
+    }
+    .mobile-75-width{
+        width: 75%;
+    }
+    .submit-talk-btn{
+        display: block;
+        margin-top: 2rem;
+        width: 50%;
+    }
+    .dashboard-talk-edit-delete-btn {
+        text-align: right;
+        margin-top: 2rem;
+    }
+}
+
+
+@media only screen and (max-width: 576px) {
+    #hero {
+        padding: 2rem;
+    }
+    .mobile-100-width{
+        width: 100%;
+    }
+    .mobile-sm-display-block{
+        display: block;
+    }
+    .mobile-padding-075{
+        padding: 0.75rem;
+    }
+    .mobile-margin-none{
+        margin: 0px;
+    }
+    .submit-talk-btn{
+        width: 100%;
+    }
+    .dashboard-mobile{
+        display: block;
+    }
+    .dashboard-user-info{
+        margin-bottom: 2rem;
+    }
+    .dashboard-talk-info span{
+        display: block;
+        margin-bottom: 0.5rem;
+    }
+
+}
+@media only screen and (max-width: 400px){
+    .dashboard-mobile .dashboard-buttons a{
+        display: block;
+        margin-bottom: 1rem;
+    }
+}

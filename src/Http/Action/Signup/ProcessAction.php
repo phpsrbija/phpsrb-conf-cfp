@@ -99,7 +99,7 @@ final class ProcessAction
             $request->getSession()->set('flash', [
                 'type'  => 'error',
                 'short' => 'Error',
-                'ext'   => 'A user already exists with that email address',
+                'ext'   => 'A user already exists with that email address' . $e->getMessage(),
             ]);
 
             return new HttpFoundation\RedirectResponse($request->headers->get('referer'));

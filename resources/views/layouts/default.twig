@@ -4,43 +4,63 @@
         <title>{% block title %}{{ site.title }}{% endblock %}</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link href="/assets/css/app.css" rel="stylesheet" media="screen">
+        <link href="/assets/css/phpsrb.css?39" rel="stylesheet" media="screen">
+        <link rel="shortcut icon" type="image/png" href="/assets/img/index.png"/>
+        <meta name="og:title" content="CFP - PHP Serbia Conference 2019">
+        <meta name="og:type" content="page">
+        <meta name="og:image" content="https://phpsrbija.rs/uploads/f/f/5/ff59f46f3ff13ef8a18092fc01861072.jpg">
+        <meta name="og:url" content="https://cfp.phpsrbija.rs/">
+        <meta name="og:description" content="Call for papers is open! Submit your talk or workshop. Submission opened until 1. February 2019">
+        <meta property="og:description" content="Call for papers is open! Submit your talk or workshop. Submission opened until 1. February 2019">
+        <meta property="og:type" content="page">
+        <meta property="og:image" content="https://phpsrbija.rs/uploads/f/f/5/ff59f46f3ff13ef8a18092fc01861072.jpg">
+        <meta property="og:url" content="https://cfp.phpsrbija.rs">
+        <meta property="og:title" content="CFP - PHP Serbia Conference 2019">
+        <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/all.css" integrity="sha384-UHRtZLI+pbxtHCWp1t77Bi1L4ZtiqrqD80Kn4Z8NTSRyMA2Fd33n5dQ8lWUE00s/" crossorigin="anonymous">
+
     </head>
     <body class="border-t-4 border-brand">
-        <nav class="{% if not active('homepage') %}border-b border-white{% endif %}">
-            <div class="container mx-auto flex justify-between">
+        <nav class="{% if not active('homepage') %}border-b border-white{% endif %} my-nav">
+            <div class="container mx-auto logoWrapper flex justify-between">
                 <a class="font-serif flex items-center" href="{{ url('homepage') }}">
-                    <img class="w-10 mr-2" src="/assets/img/phpsrb-logo.png" alt="">
-                    <h1 class="font-normal m-2">PHP <span class="text-brand font-bold">Srbija</span></h1>
+                    <img src="/assets/img/phpsrb-logo2.png" alt="" height="60">
+                    {#<h1 class="font-normal m-2">PHP <span class="text-brand font-bold">Srbija</span></h1>#}
                 </a>
-                <div class="flex">
-                    <a href="{{ url('homepage') }}" class="mr-8 py-6 {% if active('homepage') %}border-b-4 border-brand{% else %}text-soft{% endif %}">Home</a>
-                    <a href="{{ url('speaker_package') }}" class="mr-8 py-6 {% if active('speaker_package') %}border-b-4 border-brand{% else %}text-soft{% endif %}">Speaker Package</a>
-                    <a href="{{ url('talk_ideas') }}" class="mr-8 py-6 {% if active('talk_ideas') %}border-b-4 border-brand{% else %}text-soft{% endif %}">Talk Ideas</a>
+                <div class="flex nav-links-responsive">
+                    <a href="{{ url('homepage') }}" class="mr-8 py-6 {% if active('homepage') %}border-b-4 border-brand nav-link-active{% endif %}">Home</a>
+                    <a href="{{ url('speaker_package') }}" class="mr-8 py-6 {% if active('speaker_package') %}border-b-4 border-brand nav-link-active{% endif %}">Speaker Package</a>
+                    <a href="{{ url('talk_ideas') }}" class="mr-8 py-6 {% if active('talk_ideas') %}border-b-4 border-brand nav-link-active{% endif %}">Talk Ideas</a>
                     {% if user is defined and user is not empty %}
-                        <a href="{{ url('dashboard') }}" class="mr-8 py-6 {% if active('dashboard') %}border-b-4 border-brand{% else %}text-soft{% endif %}">Dashboard</a>
+                        <a href="{{ url('dashboard') }}" class="mr-8 py-6 {% if active('dashboard') %}border-b-4 border-brand nav-link-active{% endif %}">Dashboard</a>
                         {% if user_is_admin %}
-                            <a href="{{ url('admin') }}" class="mr-8 py-6 {% if active('admin') %}border-b-4 border-brand{% else %}text-soft{% endif %}">Admin</a>
+                            <a href="{{ url('admin') }}" class="mr-8 py-6 {% if active('admin') %}border-b-4 border-brand nav-link-active{% endif %}">Admin</a>
                         {% endif %}
                         {% if user_is_reviewer is defined and user_is_reviewer %}
-                            <a href="{{ url('reviewer') }}" class="mr-8 py-6 {% if active('reviewer') %}border-b-4 border-brand{% else %}text-soft{% endif %}">Reviewer</a>
+                            <a href="{{ url('reviewer') }}" class="mr-8 py-6 {% if active('reviewer') %}border-b-4 border-brand nav-link-active{% endif %}">Reviewer</a>
                         {% endif %}
                         <a href="{{ url('logout') }}" class="py-6 text-soft">Logout</a>
                     {% else %}
-                        <a href="{{ url('login') }}" class="mr-8 py-6 text-soft hover:text-dark">Login</a>
-                        <a href="{{ url('user_new') }}" class="py-6 text-soft @text-dark">Signup</a>
+                        <a href="{{ url('login') }}" class="mr-8 py-6">Login</a>
+                        <a href="{{ url('user_new') }}" class="py-6">Signup</a>
                     {% endif %}
                 </div>
+                <div class="mobile-bars">
+                    <i class="fas fa-bars"></i>
+                </div>
+
             </div>
         </nav>
 
         {% block header %}
         {% endblock %}
 
-        <main class="container mx-auto mt-8 flex">
-            <div class="flex-1 mr-16">{% block sidebar %}{% endblock %}</div>
-            <div class="flex-3 w-full">
-                {% include "_flash.twig" %}
-                {% block content %}{% endblock %}
+        <main class="pb-8">
+            <div class="container mx-auto pt-4 flex">
+                <div class="flex-1 mr-16">{% block sidebar %}{% endblock %}</div>
+                <div class="flex-3 w-full">
+                    {% include "_flash.twig" %}
+                    {% block content %}{% endblock %}
+                </div>
             </div>
         </main>
 
@@ -49,7 +69,12 @@
                     integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
                     crossorigin="anonymous"></script>
         {% endblock %}
-
+        <script>
+            $('.mobile-bars').click(function () {
+                $('.nav-links-responsive').slideToggle();
+                $('.mobile-bars i').toggleClass('fa-bars fa-times')
+            });
+        </script>
         <footer class="footer">
             <div class="container mx-auto mt-8">
                 <p>Powered by <a href="https://github.com/opencfp/opencfp">OpenCFP</a></p>

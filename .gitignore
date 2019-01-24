@@ -29,3 +29,4 @@ infection.json
 docker-compose.yml
 Homestead.yaml
 deployer.phar
+/resources/config/config_development.yml

@@ -28,7 +28,7 @@
 
     <div class="section-highlight">
         <div class="container mx-auto">
-            <div class="flex justify-between items-center px-4 py-6">
+            <div class="flex justify-between items-center px-4 py-6 d-block-mobile">
                 {% if site.event_location is defined and site.date_format is defined %}
                     <h2>{{ site.title }} is from {{ site.arrival|date(site.date_format, false) }} to {{ site.departure|date(site.date_format, false) }} in {{ site.event_location }}</h2>
                 {%  else %}

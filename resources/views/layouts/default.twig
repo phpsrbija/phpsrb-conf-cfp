@@ -25,7 +25,6 @@
                     <img src="/assets/img/phpsrb-logo2.png" alt="" height="60">
                     {#<h1 class="font-normal m-2">PHP <span class="text-brand font-bold">Srbija</span></h1>#}
                 </a>
-                <i class="fas fa-bars nav-button-mobile"></i>
 
                 <div class="flex navigation-responsive">
                     <a href="{{ url('homepage') }}" class="mr-8 py-6 {% if active('homepage') %}border-b-4 border-brand{% else %}text-soft{% endif %}">Home</a>
@@ -45,7 +44,7 @@
                         <a href="{{ url('user_new') }}" class="py-6">Signup</a>
                     {% endif %}
                 </div>
-                <div class="mobile-bars">
+                <div class="nav-button-mobile">
                     <i class="fas fa-bars"></i>
                 </div>
 
@@ -56,8 +55,8 @@
         {% endblock %}
 
         <main class="pb-8">
-            <div class="container mx-auto pt-4 flex">
-                <div class="flex-1 mr-16">{% block sidebar %}{% endblock %}</div>
+            <div class="container mx-auto pt-4 flex d-block-mobile">
+                <div class="flex-1 mr-16  w-100">{% block sidebar %}{% endblock %}</div>
                 <div class="flex-3 w-full">
                     {% include "_flash.twig" %}
                     {% block content %}{% endblock %}
@@ -71,9 +70,9 @@
                     crossorigin="anonymous"></script>
         {% endblock %}
         <script>
-            $('.mobile-bars').click(function () {
-                $('.nav-links-responsive').slideToggle();
-                $('.mobile-bars i').toggleClass('fa-bars fa-times')
+            $('.nav-button-mobile').click(function () {
+                $('.nav-button-mobile i').toggleClass('fa-bars fa-times')
+                $('.navigation-responsive').slideToggle();
             });
         </script>
         <footer class="footer">

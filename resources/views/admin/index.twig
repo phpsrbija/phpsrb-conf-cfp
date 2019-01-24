@@ -1,8 +1,8 @@
 {% extends "layouts/admin.twig" %}
 
 {% block content %}
-    <div class="flex items-center mb-8">
-        <div class="w-1/4 mr-4">
+    <div class="flex items-center mb-8 admin-statistics">
+        <div class="w-1/4 mr-4 w-100-md">
             <div class="bg-orange-lightest border-l-4 border-orange text-orange-darkest px-4 py-3 shadow">
                 <div class="flex">
                     <div class="text-5xl font-bold -mt-4 mr-4">{{ favoriteTotal }}</div>
@@ -13,7 +13,7 @@
                 </div>
             </div>
         </div>
-        <div class="w-1/4 mr-4">
+        <div class="w-1/4 mr-4 w-100-md">
             <div class="bg-indigo-lightest border-l-4 border-indigo text-indigo-darkest px-4 py-3 shadow">
                 <div class="flex">
                     <div class="text-5xl font-bold -mt-4 mr-4">{{ selectTotal }}</div>
@@ -24,7 +24,7 @@
                 </div>
             </div>
         </div>
-        <div class="w-1/4 mr-4">
+        <div class="w-1/4 mr-4 w-100-md">
             <div class="bg-teal-lightest border-l-4 border-teal text-teal-darkest px-4 py-3 shadow">
                 <div class="flex">
                     <div class="text-5xl font-bold -mt-4 mr-4">{{ talkTotal }}</div>
@@ -35,7 +35,7 @@
                 </div>
             </div>
         </div>
-        <div class="w-1/4">
+        <div class="w-1/4 w-100-md">
             <div class="bg-teal-lightest border-l-4 border-teal text-teal-darkest px-4 py-3 shadow">
                 <div class="flex">
                     <div class="text-5xl font-bold -mt-4 mr-4">{{ speakerTotal }}</div>

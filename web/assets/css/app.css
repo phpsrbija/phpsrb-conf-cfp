@@ -8,30 +8,3 @@
 
 
 
-/*responsive*/
-.nav-button-mobile{
-    display: none;
-    align-self: center;
-    font-size: 24px;
-}
-@media only screen and (max-width: 768px) {
-    nav{
-        position: relative;
-    }
-    .nav-button-mobile{
-        display: block;
-    }
-    .navigation-responsive {
-        display: none;
-        position: absolute;
-        top: 56px;
-        left: 0px;
-        right: 0px;
-        background: white;
-    }
-
-    .navigation-responsive a {
-        display: block;
-        margin-left: 2rem;
-    }
-}

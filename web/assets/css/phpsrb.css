@@ -77,73 +77,68 @@ nav a:hover {
 
 /*****RESPONSIVE*****/
 
-.my-nav{
-    position: relative;
-}
-.mobile-bars{
+
+.nav-button-mobile{
     align-self: center;
     font-size: 30px;
     display: none;
 }
-.my-talk-form select {
-    width: 100%;
+.security-form{
+    width: 300px;
 }
 @media only screen and (max-width: 992px){
-    .dashboard-user-info{
+    .dashboard-user-info, .admin-statistics, .d-block-md{
         display: block;
+    }
+    .dashboard-user-info-buttons{
+        margin-top: 2rem;
+    }
+    .w-100-md{
+        width: 100%;
     }
 }
 @media only screen and (max-width: 768px) {
-    .nav-link-active{
-        background-color: #444;
-    }
-    .my-nav{
-        padding-left: 10px;
-        padding-right: 10px;
-    }
-    .mobile-bars{
-        display: inherit;
-    }
-    .nav-links-responsive{
-        display: none;
-        position: absolute;
-        left: 0;
-        top: 70px;
-        background-color: #252525;
-        z-index: 1;
-        width: 100%;
-        padding: 12px;
-    }
-    .nav-links-responsive a{
+    .nav-button-mobile{
         display: block;
-        border: none;
-        padding-left: 10px;
     }
-    .mobile-display-block{
+
+    .d-block-mobile{
         display: block;
     }
     .section-highlight h2{
-        margin-bottom: 1.5rem;
+        margin-bottom: 1rem;
     }
-    .mobile-full-width{
+    .w-100{
         width: 100%;
     }
-    .mobile-75-width{
-        width: 75%;
+    nav{
+        position: relative;
     }
-    .submit-talk-btn{
+
+    .navigation-responsive {
+        display: none;
+        position: absolute;
+        top: 56px;
+        left: 0px;
+        right: 0px;
+        background-color: #252525;
+    }
+
+    .navigation-responsive a {
         display: block;
-        margin-top: 2rem;
-        width: 50%;
-    }
-    .dashboard-talk-edit-delete-btn {
-        text-align: right;
-        margin-top: 2rem;
+        margin-left: 2rem;
     }
 }
 
 
 @media only screen and (max-width: 576px) {
+
+    .dashboard-user-info-buttons a{
+        display: block;
+        margin-bottom: 5px;
+        width: 50%;
+    }
+
     #hero {
         padding: 2rem;
     }
@@ -175,8 +170,11 @@ nav a:hover {
 
 }
 @media only screen and (max-width: 400px){
-    .dashboard-mobile .dashboard-buttons a{
-        display: block;
-        margin-bottom: 1rem;
+    .dashboard-user-info-buttons a{
+        width: 100%;
     }
 }
+
+
+
+

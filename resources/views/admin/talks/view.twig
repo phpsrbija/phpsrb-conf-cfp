@@ -27,8 +27,8 @@
         </div>
     </div>
 
-    <div class="flex">
-        <div class="w-2/3 mr-8">
+    <div class="flex d-block-mobile">
+        <div class="w-2/3 mr-8 w-100">
             {{ talk.description|striptags|markdown }}
             {% if talk.other is not empty %}
                 <h4 class="mb-2 mt-4">Other Information</h4>

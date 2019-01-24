@@ -17,7 +17,6 @@
         <meta property="og:url" content="https://cfp.phpsrbija.rs">
         <meta property="og:title" content="CFP - PHP Serbia Conference 2019">
         <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/all.css" integrity="sha384-UHRtZLI+pbxtHCWp1t77Bi1L4ZtiqrqD80Kn4Z8NTSRyMA2Fd33n5dQ8lWUE00s/" crossorigin="anonymous">
-
     </head>
     <body class="border-t-4 border-brand">
         <nav class="{% if not active('homepage') %}border-b border-white{% endif %} my-nav">
@@ -26,10 +25,11 @@
                     <img src="/assets/img/phpsrb-logo2.png" alt="" height="60">
                     {#<h1 class="font-normal m-2">PHP <span class="text-brand font-bold">Srbija</span></h1>#}
                 </a>
-                <div class="flex nav-links-responsive">
-                    <a href="{{ url('homepage') }}" class="mr-8 py-6 {% if active('homepage') %}border-b-4 border-brand nav-link-active{% endif %}">Home</a>
-                    <a href="{{ url('speaker_package') }}" class="mr-8 py-6 {% if active('speaker_package') %}border-b-4 border-brand nav-link-active{% endif %}">Speaker Package</a>
-                    <a href="{{ url('talk_ideas') }}" class="mr-8 py-6 {% if active('talk_ideas') %}border-b-4 border-brand nav-link-active{% endif %}">Talk Ideas</a>
+
+                <div class="flex navigation-responsive">
+                    <a href="{{ url('homepage') }}" class="mr-8 py-6 {% if active('homepage') %}border-b-4 border-brand{% else %}text-soft{% endif %}">Home</a>
+                    <a href="{{ url('speaker_package') }}" class="mr-8 py-6 {% if active('speaker_package') %}border-b-4 border-brand{% else %}text-soft{% endif %}">Speaker Package</a>
+                    <a href="{{ url('talk_ideas') }}" class="mr-8 py-6 {% if active('talk_ideas') %}border-b-4 border-brand{% else %}text-soft{% endif %}">Talk Ideas</a>
                     {% if user is defined and user is not empty %}
                         <a href="{{ url('dashboard') }}" class="mr-8 py-6 {% if active('dashboard') %}border-b-4 border-brand nav-link-active{% endif %}">Dashboard</a>
                         {% if user_is_admin %}
@@ -44,7 +44,7 @@
                         <a href="{{ url('user_new') }}" class="py-6">Signup</a>
                     {% endif %}
                 </div>
-                <div class="mobile-bars">
+                <div class="nav-button-mobile">
                     <i class="fas fa-bars"></i>
                 </div>
 
@@ -55,8 +55,8 @@
         {% endblock %}
 
         <main class="pb-8">
-            <div class="container mx-auto pt-4 flex">
-                <div class="flex-1 mr-16">{% block sidebar %}{% endblock %}</div>
+            <div class="container mx-auto pt-4 flex d-block-mobile">
+                <div class="flex-1 mr-16  w-100">{% block sidebar %}{% endblock %}</div>
                 <div class="flex-3 w-full">
                     {% include "_flash.twig" %}
                     {% block content %}{% endblock %}
@@ -70,9 +70,9 @@
                     crossorigin="anonymous"></script>
         {% endblock %}
         <script>
-            $('.mobile-bars').click(function () {
-                $('.nav-links-responsive').slideToggle();
-                $('.mobile-bars i').toggleClass('fa-bars fa-times')
+            $('.nav-button-mobile').click(function () {
+                $('.nav-button-mobile i').toggleClass('fa-bars fa-times')
+                $('.navigation-responsive').slideToggle();
             });
         </script>
         <footer class="footer">
